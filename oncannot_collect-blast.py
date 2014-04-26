@@ -12,12 +12,12 @@ def reverser(CDSlist):
 	CDSlist_rev = CDSlist[::-1] #reverses the entries in the CDSlist
 	CDSlist = [] #empties CDSlist so reverse complements can append
 	for exon in CDSlist_rev:
-		seqobj = Seq(exon,IUPAC.unambiguous_dna)
+		seqobj = Seq(exon,IUPAC.unambiguous_dna) # puts sequence in a sequence object
 		seqinv = str(seqobj.reverse_complement())
 		CDSlist.append(seqinv)
 	return CDSlist
 
-def exonfinder(fbid, genename): # collects individual exons from a flybase gene entry
+def exonfinder(fbid,genename): # collects individual exons from a flybase gene entry
 	# open flybase page with corresponding ID: genome region
 	print "reading FlyBase entry for %s..." %genename	
 	region_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&dump=DecoratedFasta" %fbid
@@ -25,9 +25,13 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 	exons = [] #will collect lines that include an exon
 	pre_exon = ""
 	exoff = 0 #collecting exon: yes (1) or no (0)
+	chrom = "err"
 
 	# parse xml document: find CDS by colour
 	for line in region_xml:
+		if line.find('<title>')!=-1:#collect chromosome data
+			if re.compile('<title>[1-3|XRL]{,2}:[0-9]{3}').search(line):
+				chrom = re.compile('<title>[1-3|XRL]{,2}:[0-9]{3}').search(line).group()[7:-4]
 		if exoff == 1 and line.find('#E0FFFF">')==-1 and line.find('#C0FEFE">')==-1: #identifies a 'middle' line
 			pre_exon += line.strip() # add line to exon
 		if exoff == 1 and (line.find('#E0FFFF">')!=-1 or line.find('#C0FEFE">')!=-1): #identifies an 'end' line
@@ -38,7 +42,7 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 		if line.find('#0000F')!=-1 and exoff == 0: #identifies a 'start' line
 			pre_exon += line.strip() # add line to exon
 			exoff = 1
-	#print exons
+
 	# parse exon list: remove html code and introns/excess sequence
 	if len(exons)!=0: #prevents crash in case the gene gives an error
 		CDSlist = [] # will collect the cleaned up exons
@@ -54,30 +58,36 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 			CDSlist = reverser(CDSlist) # or use simply reverser(CDSlist)?
 			totalgene = "".join(CDSlist)
 			if totalgene[:3] == "ATG": #checks whether gene has been correctly reversed
-				print "success"
+				pass
 			else:
-				print "error in reversing sequence for " + genename
-				CDSlist = reverser(CDSlist)
-				print len(exons)
-				print len(CDSlist)
+				print "error in reversing sequence for ", genename
 		output.write("%s,%s,whole,%s\n" %(fbid,genename,totalgene)) #entry with whole genome info
 		for i in range(len(CDSlist)):
 			output.write("%s,%s,exon%s,%s\n" %(fbid,genename,i+1,CDSlist[i]))
 		CDSlist = [] #empties CDSlist for the next entry
 	else:
 		output.write("%s,%s,error\n" %(fbid,genename)) #entry when gene gives an error
+	return chrom
 
-
+def proteinscan(fbid,chrom,genename):
+	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
+	transl_xml = urllib2.urlopen(transl_url)
+	for line in transl_xml:
+		if line[0]== ">": # this line has the fasta header
+			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line).group() #parses out the exon locations used for this isoform
+			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
+			tag3 = "".join(tag2)
+			isolist = tag3.split(',') #creates list of exons per isoform
+			print genename, isolist
+			
 
 for gene in genelist:
 	fbid = gene[0]
 	genename = gene[1]
-	exonfinder(fbid,genename)
-	
+	chrom = exonfinder(fbid,genename)
+	if chrom != "err":
+		proteinscan(fbid,chrom,genename)
 
-
-	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=3L&dump=PrecompiledFasta&targetset=translation" %fbid
-	transl_xml = urllib2.urlopen(transl_url)
 
 
 ### perform blast on all protein sequences ###
