@@ -2,7 +2,7 @@ import csv, urllib2, re
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-inputdb = "segmentation_bazooka.csv"
+inputdb = "segmentation_short.csv"
 
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
@@ -27,21 +27,16 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 	exoff = 0 #collecting exon: yes (1) or no (0)
 
 	# parse xml document: find CDS by colour
-	countline = 0
 	for line in region_xml:
-		countline += 1
 		if exoff == 1 and line.find('#E0FFFF">')==-1 and line.find('#C0FEFE">')==-1: #identifies a 'middle' line
 			pre_exon += line.strip() # add line to exon
-			print "added midline ", countline
 		if exoff == 1 and (line.find('#E0FFFF">')!=-1 or line.find('#C0FEFE">')!=-1): #identifies an 'end' line
 			pre_exon += line.strip() # add line to exon
-			print "added endline ", countline
 			exons.append(pre_exon) # add exon to exon list
 			pre_exon = "" # empty exon list
 			exoff = 0
 		if line.find('#0000F')!=-1 and exoff == 0: #identifies a 'start' line
 			pre_exon += line.strip() # add line to exon
-			print "added startline ", countline
 			exoff = 1
 	#print exons
 	# parse exon list: remove html code and introns/excess sequence
@@ -63,13 +58,11 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 			else:
 				print "error in reversing sequence for " + genename
 				CDSlist = reverser(CDSlist)
-				#print CDSlist
 				print len(exons)
 				print len(CDSlist)
 		output.write("%s,%s,whole,%s\n" %(fbid,genename,totalgene)) #entry with whole genome info
 		for i in range(len(CDSlist)):
 			output.write("%s,%s,exon%s,%s\n" %(fbid,genename,i+1,CDSlist[i]))
-		#print CDSlist
 		CDSlist = [] #empties CDSlist for the next entry
 	else:
 		output.write("%s,%s,error\n" %(fbid,genename)) #entry when gene gives an error
