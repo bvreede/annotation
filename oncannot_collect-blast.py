@@ -1,13 +1,22 @@
 import csv, urllib2, re
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 
 inputdb = "segmentation_short.csv"
 
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
 
-def reverser():
+def reverser(CDSlist):
 	# TODO should put gene entry in reverse complement.
-	print "use reverser"
+	print "reversing sequence..."
+	CDSlist_rev = CDSlist[::-1] #reverses the entries in the CDSlist
+	CDSlist = [] #empties CDSlist so reverse complements can append
+	for exon in CDSlist_rev:
+		seqobj = Seq(exon,IUPAC.unambiguous_dna)
+		seqinv = str(seqobj.reverse_complement())
+		CDSlist.append(seqinv)
+	return CDSlist
 
 def exonfinder(fbid, genename): # collects individual exons from a flybase gene entry
 	# open flybase page with corresponding ID: genome region
@@ -48,7 +57,12 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 		if totalgene[:3] == "ATG": #checks whether gene has been collected sense or reverse complement
 			pass
 		else:
-			reverser()#CDSlist)
+			CDSlist = reverser(CDSlist) # or use simply reverser(CDSlist)?
+			totalgene = "".join(CDSlist)
+			if totalgene[:3] == "ATG": #checks whether gene has been correctly reversed
+				print "success"
+			else:
+				print "error in reversing sequence for " + genename
 		output.write("%s,%s,whole,%s\n" %(fbid,genename,totalgene)) #entry with whole genome info
 		for i in range(len(CDSlist)):
 			output.write("%s,%s,exon%s,%s\n" %(fbid,genename,i+1,CDSlist[i]))
