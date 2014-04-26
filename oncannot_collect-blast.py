@@ -5,6 +5,9 @@ inputdb = "segmentation_short.csv"
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
 
+def reverser():
+	# TODO should put gene entry in reverse complement.
+	print "use reverser"
 
 def exonfinder(fbid, genename): # collects individual exons from a flybase gene entry
 	# open flybase page with corresponding ID: genome region
@@ -42,6 +45,10 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 			exon2 = "".join(exon[1:]).split('</span><span style="Background-color: #E0FFFF">') # removes intron-before-exon, joins the list, splits off the intron-after-exon
 			CDSlist.append(exon2[0])		
 		totalgene = "".join(CDSlist)
+		if totalgene[:3] == "ATG": #checks whether gene has been collected sense or reverse complement
+			pass
+		else:
+			reverser()#CDSlist)
 		output.write("%s,%s,whole,%s\n" %(fbid,genename,totalgene)) #entry with whole genome info
 		for i in range(len(CDSlist)):
 			output.write("%s,%s,exon%s,%s\n" %(fbid,genename,i+1,CDSlist[i]))
@@ -49,23 +56,15 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 		CDSlist = [] #empties CDSlist for the next entry
 	else:
 		output.write("%s,%s,error\n" %(fbid,genename)) #entry when gene gives an error
-		return "error"
 
-def reverser():
-	# TODO should put gene entry in reverse complement.
-	print "use reverser"
+
+
 
 
 for gene in genelist:
 	fbid = gene[0]
 	genename = gene[1]
-	sense = exonfinder(fbid,genename) #checks whether gene has been collected sense or reverse complement
-	if sense == "ATG":
-		continue
-	elif sense == "error":
-		continue
-	else:
-		reverser()
+	exonfinder(fbid,genename)
 	
 
 
