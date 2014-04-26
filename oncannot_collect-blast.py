@@ -27,18 +27,23 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 	exoff = 0 #collecting exon: yes (1) or no (0)
 
 	# parse xml document: find CDS by colour
+	countline = 0
 	for line in region_xml:
+		countline += 1
+		if exoff == 1 and line.find('#E0FFFF">')==-1 and line.find('#C0FEFE">')==-1: #identifies a 'middle' line
+			pre_exon += line.strip() # add line to exon
+			print "added midline ", countline
 		if exoff == 1 and (line.find('#E0FFFF">')!=-1 or line.find('#C0FEFE">')!=-1): #identifies an 'end' line
 			pre_exon += line.strip() # add line to exon
+			print "added endline ", countline
 			exons.append(pre_exon) # add exon to exon list
 			pre_exon = "" # empty exon list
 			exoff = 0
 		if line.find('#0000F')!=-1 and exoff == 0: #identifies a 'start' line
 			pre_exon += line.strip() # add line to exon
+			print "added startline ", countline
 			exoff = 1
-		if exoff == 1 and (line.find('#E0FFFF">')!=1 or line.find('#C0FEFE">')!=1): #identifies a 'middle' line
-			pre_exon += line.strip() # add line to exon
-
+	#print exons
 	# parse exon list: remove html code and introns/excess sequence
 	if len(exons)!=0: #prevents crash in case the gene gives an error
 		CDSlist = [] # will collect the cleaned up exons
@@ -64,7 +69,7 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 		output.write("%s,%s,whole,%s\n" %(fbid,genename,totalgene)) #entry with whole genome info
 		for i in range(len(CDSlist)):
 			output.write("%s,%s,exon%s,%s\n" %(fbid,genename,i+1,CDSlist[i]))
-		return CDSlist[0][:3] #returns first codon; if not ATG then gene entry is reverse complement
+		#print CDSlist
 		CDSlist = [] #empties CDSlist for the next entry
 	else:
 		output.write("%s,%s,error\n" %(fbid,genename)) #entry when gene gives an error
