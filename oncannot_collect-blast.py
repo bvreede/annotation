@@ -2,13 +2,12 @@ import csv, urllib2, re
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-inputdb = "segmentation_short.csv"
+inputdb = "segmentation_bazooka.csv"
 
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
 
 def reverser(CDSlist):
-	# TODO should put gene entry in reverse complement.
 	print "reversing sequence..."
 	CDSlist_rev = CDSlist[::-1] #reverses the entries in the CDSlist
 	CDSlist = [] #empties CDSlist so reverse complements can append
@@ -26,33 +25,28 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 	exons = [] #will collect lines that include an exon
 	pre_exon = ""
 	exoff = 0 #collecting exon: yes (1) or no (0)
+
 	# parse xml document: find CDS by colour
 	for line in region_xml:
-		linecheck = 0 #to ensure that lines are not added in duplicate
-		if line.find('#E0FFFF">')!=-1:
-			if exoff == 1:
-				if linecheck == 0:
-					pre_exon += line.strip()
-					linecheck = 1
-				exons.append(pre_exon)
-				pre_exon = ""
-				exoff = 0
-		if line.find('#0000F')!=-1:
-			if linecheck == 0:
-				pre_exon += line.strip()
-				linecheck = 1
-			linecheck = 1
+		if exoff == 1 and (line.find('#E0FFFF">')!=-1 or line.find('#C0FEFE">')!=-1): #identifies an 'end' line
+			pre_exon += line.strip() # add line to exon
+			exons.append(pre_exon) # add exon to exon list
+			pre_exon = "" # empty exon list
+			exoff = 0
+		if line.find('#0000F')!=-1 and exoff == 0: #identifies a 'start' line
+			pre_exon += line.strip() # add line to exon
 			exoff = 1
-		if exoff == 1:
-			if linecheck == 0:
-				pre_exon += line.strip()
-				linecheck = 1
+		if exoff == 1 and (line.find('#E0FFFF">')!=1 or line.find('#C0FEFE">')!=1): #identifies a 'middle' line
+			pre_exon += line.strip() # add line to exon
+
+	# parse exon list: remove html code and introns/excess sequence
 	if len(exons)!=0: #prevents crash in case the gene gives an error
-		CDSlist = [] #will collect the cleaned up exons
+		CDSlist = [] # will collect the cleaned up exons
 		for each in exons: 
-			exon = re.split('</span><span style="Background-color: #E0FFFF; Color: #0000F.">', each) #removes html info
-			exon2 = "".join(exon[1:]).split('</span><span style="Background-color: #E0FFFF">') # removes intron-before-exon, joins the list, splits off the intron-after-exon
-			CDSlist.append(exon2[0])		
+			exon = re.split('</span><span style="Background-color: #[CE]0F[FE]F[FE]; Color: #0000F.">', each) #splits at html info that starts exon, as well as any html info in the middle of the exon
+			exon2 = "".join(exon[1:]) # removes intron before exon and turns list into string
+			exon3 = re.split('</span><span style="Background-color: #[CE]0F[FE]F[FE]">', exon2) # splits at html info that ends the exon
+			CDSlist.append(exon3[0]) # only appends exon to list, excluding any introns that follow	
 		totalgene = "".join(CDSlist)
 		if totalgene[:3] == "ATG": #checks whether gene has been collected sense or reverse complement
 			pass
@@ -63,6 +57,10 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 				print "success"
 			else:
 				print "error in reversing sequence for " + genename
+				CDSlist = reverser(CDSlist)
+				#print CDSlist
+				print len(exons)
+				print len(CDSlist)
 		output.write("%s,%s,whole,%s\n" %(fbid,genename,totalgene)) #entry with whole genome info
 		for i in range(len(CDSlist)):
 			output.write("%s,%s,exon%s,%s\n" %(fbid,genename,i+1,CDSlist[i]))
@@ -70,8 +68,6 @@ def exonfinder(fbid, genename): # collects individual exons from a flybase gene 
 		CDSlist = [] #empties CDSlist for the next entry
 	else:
 		output.write("%s,%s,error\n" %(fbid,genename)) #entry when gene gives an error
-
-
 
 
 
