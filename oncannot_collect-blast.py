@@ -80,8 +80,12 @@ def proteinscan(fbid,chrom,genename):
 			tag3 = "".join(tag2)
 			isolist = tag3.split(',') #creates list of exons per isoform
 			isoname = re.compile('name=[a-z|\-|A-Z]*;').search(line).group()[5:-1] #parses out name
-			print isoname, isolist
+			isoseq = ""
+			print isoname, isolist,isoseq
 		#collect protein sequences per isoform
+		if line[0]!= ">" and "<": #lines with sequence data
+			isoseq += line.strip()
+			#collecter=
 			
 
 for gene in genelist:
