@@ -14,8 +14,6 @@ def prot_exons(isolist):
 	texd_i=0
 	for i in range(isonum):
 		ex_i = isolist[i].split('..')
-		isolist_g.append(ex_i[0])#appends genomic start site exon
-		isolist_g.append(ex_i[1])#appends genomic end site exon
 		lexd_i = int(ex_i[1])-int(ex_i[0])+1 #the length of the exon in basepairs
 		sexp_i = int(texd_i/3+0.1) #generates aminoacid start location: ensures 1.0=1; 1.3=1; 1.6=1; 1.99=2
 		isolist_p.append(sexp_i) #appends start location of exon to list
@@ -24,16 +22,33 @@ def prot_exons(isolist):
 		isolist_p.append(eexp_i) #appends end location of exon to list
 	return isolist_p
 		
-def prot_dict(isolist,isolist_p,isoseq):
+def prot_dict(isolist,isolist_p,isoseq):#makes dictionary from exons and the corresponding protein sequences
 	isodict = {}
 	for i in range(len(isolist)):
-		exon = isolist[i]
-		start = isolist_p[i*2]
-		end=isolist_p[i*2+1]#if i=0, end=2; including items 0 and 1 from the string
-		sequence = isoseq[start:end]
-		isodict[exon] = sequence
+		exon = isolist[i] #identifier of the exon is the 'nnnnn..nnnn' genomic location
+		start = isolist_p[i*2] #start site is found in the protein index list isolist_p; there are twice as many items in this list (start, end, start, end) so identifier has to be multiplied
+		end=isolist_p[i*2+1]+1 #to ensure that the last aminoacid for each exon is included, 1 is added to the location id
+		sequence = isoseq[start:end] #gets the right string for this exon from the total sequence 
+		isodict[exon] = sequence #saves in dictionary: the exon-specific sequence with the exon identifier as key
 	return isodict
 
+def isolator(isolist):
+	isoset=set(isolist) #puts all items in a set. This deletes duplicates.
+	isolist2 = []
+	for i in isoset:
+		spliti = i.split('..') #splits start and end location
+		ilist = [int(spliti[0]),int(spliti[1])] #makes a new list with start and end locations
+		isolist2.append(ilist)
+	isolist2.sort()
+	for n in range(len(isolist2)-1):
+		for k in range(len(isolist2)-n):
+			if isolist2[n][1] >= isolist2[n+k][0]:
+				#print n,k
+			#if isolist2[n][1] >= isolist[n_1][1]:
+				
+		#	elif isolist2[n][1] <= isolist[n_1][1]:
+		#else:
+		#	print isolist2[n+1][0]
 
 def reverser(CDSlist):
 	print "reversing sequence..."
@@ -102,25 +117,27 @@ def proteinscan(fbid,chrom,genename):
 	transl_xml = urllib2.urlopen(transl_url)
 	isoseq = ""
 	isolist = []
+	isolist_collect = []
 	isoname = ""
+	genedict = {}
 	for line in transl_xml:
 		#get info on isoforms: which exons are used?
 		if line[0]== ">": # this line has the fasta header
-			#saving previous isoform info
-			isolist_p = prot_exons(isolist)
-			isodict = prot_dict(isolist,isolist_p,isoseq)
-			print isodict
-			#including previous tag information
+			isolist_p = prot_exons(isolist) #get corresponding protein start-end sites from chromosomal start-end sites
+			isodict = prot_dict(isolist,isolist_p,isoseq) #put all in dictionary
+			genedict.update(isodict)
 			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line).group() #parses out the exon locations used for this isoform
 			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
 			tag3 = "".join(tag2)
 			isolist = tag3.split(',') #creates list of exons per isoform
+			isolist_collect.extend(isolist)
 			isoname = re.compile('name=[a-z|\-|A-Z]*;').search(line).group()[5:-1] #parses out name
 			#print isoseq
 			isoseq = ""
 		#collect protein sequences per isoform
 		if line[0]!= ">": #lines with sequence data
 			isoseq += line.strip()
+	isolator(isolist_collect)
 			
 
 for gene in genelist:
