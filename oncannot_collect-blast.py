@@ -10,16 +10,17 @@ output = open("%s-output.csv" %(inputdb[:-4]),"w")
 def prot_exons(isolist):
 	isonum = len(isolist)
 	isolist_p = []
-	texp_i=0
+	texd_i=0
 	for i in range(isonum):
 		ex_i = isolist[i].split('..')
-		lexp_i = (int(ex_i[1])-int(ex_i[0]))/3 #the length of the exon in aminoacids
-		#isolist_p.append(texp_i) #appends start location of exon to list
-		texp_i += lexp_i
-		isolist_p.append(texp_i) #appends end location of exon to list
+		lexd_i = int(ex_i[1])-int(ex_i[0])+1 #the length of the exon in basepairs
+		sexp_i = int(texd_i/3+0.1) #generates aminoacid start location: ensures 1.0=1; 1.3=1; 1.6=1; 1.99=2
+		isolist_p.append(sexp_i) #appends start location of exon to list
+		texd_i += lexd_i
+		eexp_i = int(texd_i/3-0.1) #generates aminoacid end location: ensures 1.0=0; 1.3=1; 1.6=1; 1.99=1
+		isolist_p.append(eexp_i) #appends end location of exon to list
 	return isolist_p
 		
-	
 
 def reverser(CDSlist):
 	print "reversing sequence..."
