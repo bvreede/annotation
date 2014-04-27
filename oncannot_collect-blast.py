@@ -73,12 +73,15 @@ def proteinscan(fbid,chrom,genename):
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
 	for line in transl_xml:
+		#get info on isoforms: which exons are used?
 		if line[0]== ">": # this line has the fasta header
 			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line).group() #parses out the exon locations used for this isoform
 			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
 			tag3 = "".join(tag2)
 			isolist = tag3.split(',') #creates list of exons per isoform
-			print genename, isolist
+			isoname = re.compile('name=[a-z|\-|A-Z]*;').search(line).group()[5:-1] #parses out name
+			print isoname, isolist
+		#collect protein sequences per isoform
 			
 
 for gene in genelist:
