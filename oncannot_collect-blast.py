@@ -7,6 +7,20 @@ inputdb = "segmentation_short.csv"
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
 
+def prot_exons(isolist):
+	isonum = len(isolist)
+	isolist_p = []
+	texp_i=0
+	for i in range(isonum):
+		ex_i = isolist[i].split('..')
+		lexp_i = (int(ex_i[1])-int(ex_i[0]))/3 #the length of the exon in aminoacids
+		#isolist_p.append(texp_i) #appends start location of exon to list
+		texp_i += lexp_i
+		isolist_p.append(texp_i) #appends end location of exon to list
+	return isolist_p
+		
+	
+
 def reverser(CDSlist):
 	print "reversing sequence..."
 	CDSlist_rev = CDSlist[::-1] #reverses the entries in the CDSlist
@@ -72,20 +86,25 @@ def exonfinder(fbid,genename): # collects individual exons from a flybase gene e
 def proteinscan(fbid,chrom,genename):
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
+	isoseq = ""
+	isolist = []
+	isoname = ""
 	for line in transl_xml:
 		#get info on isoforms: which exons are used?
 		if line[0]== ">": # this line has the fasta header
+			#save previous isoseq somewhere here
+			isolist_p = prot_exons(isolist)
+			print isolist_p
+			#including previous tag information
 			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line).group() #parses out the exon locations used for this isoform
 			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
 			tag3 = "".join(tag2)
 			isolist = tag3.split(',') #creates list of exons per isoform
 			isoname = re.compile('name=[a-z|\-|A-Z]*;').search(line).group()[5:-1] #parses out name
 			isoseq = ""
-			print isoname, isolist,isoseq
 		#collect protein sequences per isoform
-		if line[0]!= ">" and "<": #lines with sequence data
+		if line[0]!= (">" and "<"): #lines with sequence data
 			isoseq += line.strip()
-			#collecter=
 			
 
 for gene in genelist:
