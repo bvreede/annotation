@@ -174,6 +174,7 @@ def proteinscan(fbid,chrom,genename,revflag):
 		#del genedict[popkey]
 	print genedict		
 
+
 for gene in genelist:
 	fbid = gene[0]
 	genename = gene[1]
