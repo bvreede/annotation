@@ -8,6 +8,14 @@ genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
 
 def prot_exons(isolist):
+	'''
+	Takes the list of exon locations per isoform ('nnnnnn..nnnnnn')
+	and finds the corresponding start and end sites in the protein sequence
+	of that isoform.
+	Returns those locations as integers in a list that is twice as long
+	as the initial list: per entry in 'isolist' there is a 'start' and an 'end'
+	entry in the 'isolist_p'.
+	'''
 	isonum = len(isolist)
 	isolist_p = []
 	isolist_g = []
@@ -18,37 +26,54 @@ def prot_exons(isolist):
 		sexp_i = int(texd_i/3+0.1) #generates aminoacid start location: ensures 1.0=1; 1.3=1; 1.6=1; 1.99=2
 		isolist_p.append(sexp_i) #appends start location of exon to list
 		texd_i += lexd_i
-		eexp_i = int(texd_i/3-0.1) #generates aminoacid end location: ensures 1.0=0; 1.3=1; 1.6=1; 1.99=1
+		eexp_i = int(texd_i/3-0.1+1) #generates aminoacid end location: ensures 1.0=0; 1.3=1; 1.6=1; 1.99=1; adds 1 to INCLUDE that amino acid (it is the last amino acid, not the end site!)
 		isolist_p.append(eexp_i) #appends end location of exon to list
 	return isolist_p
 		
-def prot_dict(isolist,isolist_p,isoseq):#makes dictionary from exons and the corresponding protein sequences
+def prot_dict(isolist,isolist_p,isoseq):
+	'''
+	Takes the list of exon locations per isoform ('nnnnnn..nnnnnn') and uses it as keys;
+	uses the isolist_p list (made in the prot_exons module) with start and end sites to
+	find the corresponding protein sequence of that isoform.
+	Returns a dictionary with exon locations as keys, and the sequence as values.
+	'''
 	isodict = {}
 	for i in range(len(isolist)):
 		exon = isolist[i] #identifier of the exon is the 'nnnnn..nnnn' genomic location
 		start = isolist_p[i*2] #start site is found in the protein index list isolist_p; there are twice as many items in this list (start, end, start, end) so identifier has to be multiplied
-		end=isolist_p[i*2+1]+1 #to ensure that the last aminoacid for each exon is included, 1 is added to the location id
+		end=isolist_p[i*2+1]
 		sequence = isoseq[start:end] #gets the right string for this exon from the total sequence 
 		isodict[exon] = sequence #saves in dictionary: the exon-specific sequence with the exon identifier as key
 	return isodict
 
 def isolator(isolist):
+	'''
+	takes the total list of exons from all isoforms of a gene
+	and finds the duplicates and overlaps. Returns a set of keys
+	that can be removed from the exon dictionary.
+	'''
 	isoset=set(isolist) #puts all items in a set. This deletes duplicates.
 	isolist2 = []
 	for i in isoset:
 		spliti = i.split('..') #splits start and end location
-		ilist = [int(spliti[0]),int(spliti[1])] #makes a new list with start and end locations
+		ilist = [int(spliti[0]),int(spliti[1])] #makes a new sublist with start and end locations
 		isolist2.append(ilist)
-	isolist2.sort()
-	for n in range(len(isolist2)-1):
-		for k in range(len(isolist2)-n):
-			if isolist2[n][1] >= isolist2[n+k][0]:
-				#print n,k
-			#if isolist2[n][1] >= isolist[n_1][1]:
-				
-		#	elif isolist2[n][1] <= isolist[n_1][1]:
-		#else:
-		#	print isolist2[n+1][0]
+	isolist2.sort() #sorts on start location (first item in the sublists)
+	check = isolist2[0] #the sublist (start,end) against which each test entry will be checked
+	pop = []
+	for n in range(1,len(isolist2)):	#go through each entry after the first (the first is 'check', the others are 'test')
+		if isolist2[n][0] == check[0]: 		#if the start sequences are the same...
+			if isolist2[n][1] >= check[1]:		#...and the end of the test is after the end of the check
+				pop.append(check)			#then discard the check
+				check = isolist2[n]			#and make the test entry a new check
+			else:					#...and the end of the check is after the end of the test
+				pop.append(isolist2[n])			#discard the test entry
+		else:					#if the start sequences are not equal (which means test starts after check)...
+			if isolist2[n][1] <= check[1]:		#...and the end of the test is before or equal to the end of the check
+				pop.append(isolist2[n])			#then discard the test entry
+			else:					#...and the end of the test is after the end of the check
+				check = isolist2[n]			#make the test entry a new check
+	return pop
 
 def reverser(CDSlist):
 	print "reversing sequence..."
@@ -69,6 +94,7 @@ def exonfinder(fbid,genename): # collects individual exons from a flybase gene e
 	pre_exon = ""
 	exoff = 0 #collecting exon: yes (1) or no (0)
 	chrom = "err"
+	revflag = 0
 
 	# parse xml document: find CDS by colour
 	for line in region_xml:
@@ -99,6 +125,7 @@ def exonfinder(fbid,genename): # collects individual exons from a flybase gene e
 			pass
 		else:
 			CDSlist = reverser(CDSlist) # or use simply reverser(CDSlist)?
+			revflag = 1
 			totalgene = "".join(CDSlist)
 			if totalgene[:3] == "ATG": #checks whether gene has been correctly reversed
 				pass
@@ -110,9 +137,9 @@ def exonfinder(fbid,genename): # collects individual exons from a flybase gene e
 		CDSlist = [] #empties CDSlist for the next entry
 	else:
 		output.write("%s,%s,error\n" %(fbid,genename)) #entry when gene gives an error
-	return chrom
+	return chrom, revflag
 
-def proteinscan(fbid,chrom,genename):
+def proteinscan(fbid,chrom,genename,revflag):
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
 	isoseq = ""
@@ -137,15 +164,22 @@ def proteinscan(fbid,chrom,genename):
 		#collect protein sequences per isoform
 		if line[0]!= ">": #lines with sequence data
 			isoseq += line.strip()
-	isolator(isolist_collect)
-			
+	pop = isolator(isolist_collect)
+	for k in pop:
+		if revflag == 0:
+			i = [str(k[0]),str(k[1])] #make string to enable joining
+		else:
+			i = [str(k[1]),str(k[0])]
+		popkey = "..".join(i)
+		#del genedict[popkey]
+	print genedict		
 
 for gene in genelist:
 	fbid = gene[0]
 	genename = gene[1]
-	chrom = exonfinder(fbid,genename)
-	if chrom != "err":
-		proteinscan(fbid,chrom,genename)
+	chromrev = exonfinder(fbid,genename)
+	if chromrev[0] != "err":
+		proteinscan(fbid,chromrev[0],genename,chromrev[1])
 
 
 
