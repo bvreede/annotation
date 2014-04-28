@@ -159,20 +159,23 @@ def proteinscan(fbid,chrom,genename,revflag):
 			isolist = tag3.split(',') #creates list of exons per isoform
 			isolist_collect.extend(isolist)
 			isoname = re.compile('name=[a-z|\-|A-Z]*;').search(line).group()[5:-1] #parses out name
-			#print isoseq
 			isoseq = ""
 		#collect protein sequences per isoform
 		if line[0]!= ">": #lines with sequence data
 			isoseq += line.strip()
+	#what follows now is a repeat so that the last exon is included
+	isolist_p = prot_exons(isolist)
+	isodict = prot_dict(isolist,isolist_p,isoseq) #put all in dictionary
+	genedict.update(isodict)
+	#end of repeat code
 	pop = isolator(isolist_collect)
 	for k in pop:
-		if revflag == 0:
-			i = [str(k[0]),str(k[1])] #make string to enable joining
-		else:
-			i = [str(k[1]),str(k[0])]
+		i = [str(k[0]),str(k[1])] #make string to enable joining
 		popkey = "..".join(i)
-		#del genedict[popkey]
-	print genedict		
+		del genedict[popkey]
+	for key, value in genedict.items():
+		print key
+	
 
 
 for gene in genelist:
