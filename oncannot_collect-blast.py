@@ -2,10 +2,18 @@ import csv, urllib2, re
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-inputdb = "segmentation_short.csv"
+inputdb = "segmentation_bicoid.csv"
 
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
+
+def translater(seq):
+	#add here translater
+	trans1 = "translation1"
+	trans2 = "translation2"
+	trans3 = "translation3"
+	return trans1, trans2, trans3
+
 
 def prot_exons(isolist):
 	'''
@@ -94,7 +102,7 @@ def exonfinder(fbid,genename): # collects individual exons from a flybase gene e
 	pre_exon = ""
 	exoff = 0 #collecting exon: yes (1) or no (0)
 	chrom = "err"
-	revflag = 0
+	revflag = 0 #will be turned on if the gene is reverse complement
 
 	# parse xml document: find CDS by colour
 	for line in region_xml:
@@ -133,7 +141,8 @@ def exonfinder(fbid,genename): # collects individual exons from a flybase gene e
 				print "error in reversing sequence for ", genename
 		output.write("%s,%s,whole,%s\n" %(fbid,genename,totalgene)) #entry with whole genome info
 		for i in range(len(CDSlist)):
-			output.write("%s,%s,exon%s,%s\n" %(fbid,genename,i+1,CDSlist[i]))
+			translation=translater(CDSlist[i])
+			output.write("%s,%s,exon%s,%s,%s,%s,%s\n" %(fbid,genename,i+1,CDSlist[i],translation[0],translation[1],translation[2]))
 		CDSlist = [] #empties CDSlist for the next entry
 	else:
 		output.write("%s,%s,error\n" %(fbid,genename)) #entry when gene gives an error
@@ -173,9 +182,9 @@ def proteinscan(fbid,chrom,genename,revflag):
 		i = [str(k[0]),str(k[1])] #make string to enable joining
 		popkey = "..".join(i)
 		del genedict[popkey]
-	for key, value in genedict.items():
-		print key
-	
+	#for key, value in genedict.items():
+	#	print key
+	print genedict
 
 
 for gene in genelist:
