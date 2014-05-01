@@ -108,7 +108,12 @@ def hitextract(fragments,dir_out,n):
 		span = [int(hit[2]),int(hit[3])]
 		start = min(span)-n
 		end = max(span)+n
-		print start,end
+		scaffasta = open("%s/%s-entire.fa" %(dir_out,scaffid))
+		line = scaffasta.readlines() 
+		linelen = len(line[1].strip()) # calculates the n of basepairs in each line
+		linestart = start/50
+		lineend = end/50
+		#print linestart,lineend
 
 '''
 
