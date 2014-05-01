@@ -8,27 +8,31 @@ Contact: b.vreede@gmail.com
 Date: 29 April 2014
 '''
 
+import os, time
 
 ### INPUT VARIABLES TO BE GIVEN TO THE PROGRAMME ###
-#genome = input # the fasta file with the genome (the same one that was used for the initial blast)
-blastres = open("testoutput") #input # blast output file
+genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa" #input # the fasta file with the genome (the same one that was used for the initial blast)
+blastoutput = "testoutput" #input # blast output file
 #addbp = input # how many bp before and after the result sequence
 #numseq = input # number of hits to look at
+
+### OTHER PREDEFINED VARIABLES AND INFORMATION ###
 
 
 
 ### READ OUTPUT FILE ###
+'''
+reads the output file and returns info needed to extract from the
+genome fasta file:
+* Scaffold number
+* frame (not necessary to extract, but useful info for outputfile)
+* Start site
+* End site
+'''
 def blastreader(blast):
-	'''
-	reads the output file and returns info needed to extract from the
-	genome fasta file:
-	* Scaffold number
-	* frame (not necessary to extract, but useful info for outputfile)
-	* Start site
-	* End site
-	'''
-	mainlist = [] #list of lists: scaffolds with their corresponding start-end sites
-	numlist = [] #list of all start-end sites per scaffold
+	
+	mainlist = [] #list of lists: scaffolds and frames with their corresponding start-end sites
+	numlist = [] #list of all start-end sites per scaffold and frame
 	scaf = ""
 	frame = ""
 	for line in blast:
@@ -62,8 +66,75 @@ def blastreader(blast):
 			break
 	return mainlist
 
-fragments = blastreader(blastres)
 
+### EXTRACT THE APPROPRIATE SCAFFOLDS ###
+'''
+Goes into genome fasta file and collects the scaffolds that
+are in the scaffold list; saves them in
+'''
+def scaffoldextractor(readgenome,dir_out,scaflist):
+	marker = 0 # is "1" when reading and saving scaffold sequence
+	scafname = "notinlist" # is "notinlist" when scaffold name is not in list
+	for line in readgenome:
+		if line[0] == ">":
+			scaf = line[1:].strip()
+			if scaf in scaflist:
+				marker = 1
+				scafname = scaf
+				scafdir = "%s/%s" %(dir_out,scafname)
+				os.mkdir(scafdir)
+				outputfile = open("%s/%s/%s.fa" %(dir_out,scafname,scafname), "w")
+				outputfile.write(line)
+			else:
+				marker = 0
+				if scafname != "notinlist":
+					outputfile.close()
+					scafname = "notinlist"
+		elif marker == 1:
+			outputfile.write(line)#.strip())
+			
+### DEFINE: GO THROUGH THE SAVED SCAFFOLD AND SELECT THE APPROPRIATE AREA ###
+'''
+def hitextract(mainlist,subdir_out,decodefile):
+	for scaff in mainlist:
+		scaffid = scaff[0]
+		items = scaff[-1]
+		values = scaff[1:-1]
+		low = min(values) - distance
+		if low <= 0:
+			low = 0
+		high = max(values) + distance
+		readscaffold = open("%s/%s.txt" %(subdir_out, scaffid))
+		for seq in readscaffold:
+			if high >= len(seq):
+				high = len(seq)
+			resultfile = open("%s/%s_part.xdna" %(subdir_out, scaffid), "w")
+			resultfile.write(seq[low:high])
+			resultfile.close()
+		decodefile.write("\nResults for %s\n" %scaffid)
+		for i in range(items):
+			start = scaff[i*2+1] - low
+			end = scaff[i*2+2] - low
+			score = i+1
+			decodefile.write("Score %s:\t%s\t%s\n" %(score, start, end))
+		readscaffold.close()
+'''
+
+
+blastres = open(blastoutput)
+readgenome = open(genome)
+time = int(time.time())
+dir_out = "%s_seq-%s" % (blastoutput, time)
+os.mkdir(dir_out)
+fragments = blastreader(blastres)
+scaflist = []
+#make a list of scaffolds to collect
+for line in fragments:
+	if line[0] in scaflist:
+		continue
+	else:
+		scaflist.append(line[0])
+scaffoldextractor(readgenome,dir_out,scaflist)
 
 
 
