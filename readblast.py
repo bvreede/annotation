@@ -13,7 +13,7 @@ import os, time
 ### INPUT VARIABLES TO BE GIVEN TO THE PROGRAMME ###
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa" #input # the fasta file with the genome (the same one that was used for the initial blast)
 blastoutput = "testoutput" #input # blast output file
-#addbp = input # how many bp before and after the result sequence
+addbp = 100 #input # how many bp before and after the result sequence
 #numseq = input # number of hits to look at
 
 ### OTHER PREDEFINED VARIABLES AND INFORMATION ###
@@ -46,8 +46,8 @@ def blastreader(blast):
 			scaf = line.split()[1]
 		elif line[1:6] == "Frame": #indicates the start of a new blast result
 			if len(numlist) != 0:
-				start = numlist[0]
-				end = numlist[-1]
+				start = (numlist[0])
+				end = (numlist[-1])
 				framelist = [scaf,frame,start,end]
 				mainlist.append(framelist)
 				numlist = []
@@ -70,9 +70,9 @@ def blastreader(blast):
 ### EXTRACT THE APPROPRIATE SCAFFOLDS ###
 '''
 Goes into genome fasta file and collects the scaffolds that
-are in the scaffold list; saves them in
+are in the scaffold list; saves them as separate fasta files.
 '''
-def scaffoldextractor(readgenome,dir_out,scaflist):
+def scaffoldextract(readgenome,dir_out,scaflist):
 	marker = 0 # is "1" when reading and saving scaffold sequence
 	scafname = "notinlist" # is "notinlist" when scaffold name is not in list
 	for line in readgenome:
@@ -81,9 +81,7 @@ def scaffoldextractor(readgenome,dir_out,scaflist):
 			if scaf in scaflist:
 				marker = 1
 				scafname = scaf
-				scafdir = "%s/%s" %(dir_out,scafname)
-				os.mkdir(scafdir)
-				outputfile = open("%s/%s/%s.fa" %(dir_out,scafname,scafname), "w")
+				outputfile = open("%s/%s-entire.fa" %(dir_out,scafname), "w")
 				outputfile.write(line)
 			else:
 				marker = 0
@@ -93,10 +91,28 @@ def scaffoldextractor(readgenome,dir_out,scaflist):
 		elif marker == 1:
 			outputfile.write(line)#.strip())
 			
-### DEFINE: GO THROUGH THE SAVED SCAFFOLD AND SELECT THE APPROPRIATE AREA ###
+### GO THROUGH THE SAVED SCAFFOLDS AND SELECT THE APPROPRIATE AREA ###
 '''
-def hitextract(mainlist,subdir_out,decodefile):
-	for scaff in mainlist:
+Takes each hit and searches the appropriate scaffold file.
+Finds the sequence that spans between start-end, and adds up
+the extra span length that has been indicated by the user.
+(Default is 100.)
+Makes a new fasta file that contains the sequences of all hits
+and describes in the header the start and end site, as well as
+the frame, and how many bp were added.
+'''
+def hitextract(fragments,dir_out,n):
+	for hit in fragments:
+		scaffid = hit[0]
+		frame = hit[1]
+		span = [int(hit[2]),int(hit[3])]
+		start = min(span)-n
+		end = max(span)+n
+		print start,end
+
+'''
+
+
 		scaffid = scaff[0]
 		items = scaff[-1]
 		values = scaff[1:-1]
@@ -134,7 +150,7 @@ for line in fragments:
 		continue
 	else:
 		scaflist.append(line[0])
-scaffoldextractor(readgenome,dir_out,scaflist)
-
+scaffoldextract(readgenome,dir_out,scaflist)
+hitextract(fragments,dir_out,addbp)
 
 
