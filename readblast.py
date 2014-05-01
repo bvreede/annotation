@@ -10,81 +10,60 @@ Date: 29 April 2014
 
 
 ### INPUT VARIABLES TO BE GIVEN TO THE PROGRAMME ###
-genome = input # the fasta file with the genome [the same one that was used for the initial blast]
-blastres = input # blast output file
-addbp = input # how many bp before and after the result sequence
-numseq = input # number of hits to look at
+#genome = input # the fasta file with the genome (the same one that was used for the initial blast)
+blastres = open("testoutput") #input # blast output file
+#addbp = input # how many bp before and after the result sequence
+#numseq = input # number of hits to look at
 
 
 
 ### READ OUTPUT FILE ###
 def blastreader(blast):
-'''
-reads the output file and returns info needed to extract from the
-genome fasta file:
-* Scaffold number
-* Start site
-* End site
-'''
-	#prevline = ""
-	#scorecount = 0
-	#start = ""
-	#startcount = 0
+	'''
+	reads the output file and returns info needed to extract from the
+	genome fasta file:
+	* Scaffold number
+	* frame (not necessary to extract, but useful info for outputfile)
+	* Start site
+	* End site
+	'''
 	mainlist = [] #list of lists: scaffolds with their corresponding start-end sites
-	#scaflist = [] #list of scaffolds.
 	numlist = [] #list of all start-end sites per scaffold
-
-
+	scaf = ""
+	frame = ""
 	for line in blast:
-		if line[0] == ">":
-			scaf = line.split()[1]
-		elif line[1:6] == "Frame":
+		if line[0] == ">": # indicates the start of a new scaffold
 			if len(numlist) != 0:
-				numlist.order
+				start = numlist[0]
+				end = numlist[-1]
 				framelist = [scaf,frame,start,end]
 				mainlist.append(framelist)
-			else:
-				continue
-			frame = line.split()[2]
-		elif line[:5] == "Sbjct":
-			if startcount == 0:
-				start = line.split()[1]
-				numlist.append(int(start))
-			startcount += 1
-			prevline = line
-		elif line[1:6] == "Score":
-			scorecount += 1
-			startcount = 0
-			if prevline == "":
-				pass
-			else:
-				stop = prevline.split()[3]
-				numlist.append(int(stop))
-		elif line[:6] == "Lambda": #this indicates the end of the file.
-			stop = prevline.split()[3]
-			numlist.append(int(stop))
-			numlist.append(scorecount)
-			mainlist.append(numlist)
-			break
-	mainlist = mainlist[1:] #because the first item in the list is empty as it stores the scorecount 0
-	return mainlist, scaflist
-
-
-'''
-		if line[2:10] == "Scaffold":
-			scaffold = line.split()
-			if scaffold[0] == ">":
-				if prevline != "":
-					stop = prevline.split()[3]
-					numlist.append(int(stop))
-					prevline = ""
-				numlist.append(scorecount)
-				mainlist.append(numlist)
 				numlist = []
-				numlist.append(scaffold[1])
-				scorecount = 0
-			else:
-				scaflist.append(scaffold[0])#[8:])
-'''
+			scaf = line.split()[1]
+		elif line[1:6] == "Frame": #indicates the start of a new blast result
+			if len(numlist) != 0:
+				start = numlist[0]
+				end = numlist[-1]
+				framelist = [scaf,frame,start,end]
+				mainlist.append(framelist)
+				numlist = []
+			frame = line.split()[2]
+		elif line[:5] == "Sbjct": #indicates a line with subject information
+			start = line.split()[1]
+			end = line.split()[3]
+			numlist.append(start)
+			numlist.append(end)
+		elif line[:6] == "Lambda": #this indicates the end of the file.
+			if len(numlist) != 0:
+				start = numlist[0]
+				end = numlist[-1]
+				framelist = [scaf,frame,start,end]
+				mainlist.append(framelist)
+			break
+	return mainlist
+
+fragments = blastreader(blastres)
+
+
 
 
