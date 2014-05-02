@@ -107,13 +107,23 @@ def hitextract(fragments,dir_out,n):
 		frame = hit[1]
 		span = [int(hit[2]),int(hit[3])]
 		start = min(span)-n
+		if start <= 1:
+			start = 1
 		end = max(span)+n
 		scaffasta = open("%s/%s-entire.fa" %(dir_out,scaffid))
 		line = scaffasta.readlines() 
+		print len(line)
 		linelen = len(line[1].strip()) # calculates the n of basepairs in each line
-		linestart = start/50
-		lineend = end/50
-		#print linestart,lineend
+		linestart = start/50+1
+		lineend = end/50+2
+		if lineeend >= len(line):
+			lineend = len(line)
+		start_inseq = start
+		end_inseq =  start
+		#lineread
+		outfasta = open("%s/%s-blastresults.fa" %(dir_out,scaffid), "a")
+		outfasta.write(">%s_blastresult=from:%s_to:%s_blastID=%s_frame=%s\n" %(scaffid,start_inseq,end_inseq,dir_out,frame[0]))
+		
 
 '''
 
