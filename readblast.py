@@ -8,15 +8,21 @@ Contact: b.vreede@gmail.com
 Date: 29 April 2014
 '''
 
-import os, time
+import os, time, sys
 
-### INPUT VARIABLES TO BE GIVEN TO THE PROGRAMME ###
-genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa" #input # the fasta file with the genome (the same one that was used for the initial blast)
-blastoutput = "testoutput" #input # blast output file
-addbp = 100 #input # how many bp before and after the result sequence
+### INPUT ARGUMENTS ###
+if len(sys.argv) <= 2:
+	sys.exit("USAGE: python readblast.py path/to/genome path/to/blast.output.file [n_nucleotides_to_add]")
+
+genome = sys.argv[1] #path to genome
+blastoutput = sys.argv[2] #path to BLAST outputfile
+if len(sys.argv) == 4:
+	addbp=sys.argv[3]
+else:
+	addbp = 100 #n of nucleotides to add to each sequence
 
 
-### READ OUTPUT FILE ###
+### READ BLAST OUTPUT FILE ###
 '''
 reads the output file and returns info needed to extract from the
 genome fasta file:
@@ -120,8 +126,8 @@ def hitextract(fragments,dir_out,n):
 		for i in range(linestart,lineend):
 			outfasta.write(line[i])
 		outfasta.write("\n")
-		results = open("%s/HIT-TABLE.txt" %(dir_out), "a")
-		results.write("%s\tstart: %s\tend: %s\tframe: %s\n" %(scaffid,hit[2],hit[3],frame))
+		#results = open("%s/HIT-TABLE.txt" %(dir_out), "a")
+		#results.write("%s\tstart: %s\tend: %s\tframe: %s\n" %(scaffid,hit[2],hit[3],frame))
 
 blastres = open(blastoutput)
 readgenome = open(genome)
@@ -138,5 +144,3 @@ for line in fragments:
 		scaflist.append(line[0])
 scaffoldextract(readgenome,dir_out,scaflist)
 hitextract(fragments,dir_out,addbp)
-
-
