@@ -14,10 +14,6 @@ import os, time
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa" #input # the fasta file with the genome (the same one that was used for the initial blast)
 blastoutput = "testoutput" #input # blast output file
 addbp = 100 #input # how many bp before and after the result sequence
-#numseq = input # number of hits to look at
-
-### OTHER PREDEFINED VARIABLES AND INFORMATION ###
-
 
 
 ### READ OUTPUT FILE ###
@@ -99,7 +95,7 @@ the extra span length that has been indicated by the user.
 (Default is 100.)
 Makes a new fasta file that contains the sequences of all hits
 and describes in the header the start and end site, as well as
-the frame, and how many bp were added.
+the frame, and how many nt were added.
 '''
 def hitextract(fragments,dir_out,n):
 	for hit in fragments:
@@ -112,50 +108,25 @@ def hitextract(fragments,dir_out,n):
 		end = max(span)+n
 		scaffasta = open("%s/%s-entire.fa" %(dir_out,scaffid))
 		line = scaffasta.readlines() 
-		print len(line)
 		linelen = len(line[1].strip()) # calculates the n of basepairs in each line
 		linestart = start/50+1
-		lineend = end/50+2
-		if lineeend >= len(line):
+		lineend = end/50+1
+		if lineend >= len(line):
 			lineend = len(line)
-		start_inseq = start
-		end_inseq =  start
-		#lineread
+		start_inseq = (start+n)-((linestart-1)*50)+1 # where in the sequence between linestart-lineend is the actual hit?
+		end_inseq = end-start-2*n+start_inseq # where in the sequence between linestart-lineend does the hit end?
 		outfasta = open("%s/%s-blastresults.fa" %(dir_out,scaffid), "a")
-		outfasta.write(">%s_blastresult=from:%s_to:%s_blastID=%s_frame=%s\n" %(scaffid,start_inseq,end_inseq,dir_out,frame[0]))
-		
-
-'''
-
-
-		scaffid = scaff[0]
-		items = scaff[-1]
-		values = scaff[1:-1]
-		low = min(values) - distance
-		if low <= 0:
-			low = 0
-		high = max(values) + distance
-		readscaffold = open("%s/%s.txt" %(subdir_out, scaffid))
-		for seq in readscaffold:
-			if high >= len(seq):
-				high = len(seq)
-			resultfile = open("%s/%s_part.xdna" %(subdir_out, scaffid), "w")
-			resultfile.write(seq[low:high])
-			resultfile.close()
-		decodefile.write("\nResults for %s\n" %scaffid)
-		for i in range(items):
-			start = scaff[i*2+1] - low
-			end = scaff[i*2+2] - low
-			score = i+1
-			decodefile.write("Score %s:\t%s\t%s\n" %(score, start, end))
-		readscaffold.close()
-'''
-
+		outfasta.write(">%s:%s-%s_in-following-seq=%s-%s_frame=%s\n" %(scaffid,hit[2],hit[3],start_inseq,end_inseq,frame[0]))
+		for i in range(linestart,lineend):
+			outfasta.write(line[i])
+		outfasta.write("\n")
+		results = open("%s/HIT-TABLE.txt" %(dir_out), "a")
+		results.write("%s\tstart: %s\tend: %s\tframe: %s\n" %(scaffid,hit[2],hit[3],frame))
 
 blastres = open(blastoutput)
 readgenome = open(genome)
 time = int(time.time())
-dir_out = "%s_seq-%s" % (blastoutput, time)
+dir_out = "%s-%s" % (blastoutput, time)
 os.mkdir(dir_out)
 fragments = blastreader(blastres)
 scaflist = []
