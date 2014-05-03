@@ -20,7 +20,7 @@ Download the appropriate BLAST installation file for your system at:
 A user manual for the installation of BLAST in your OS can be found at:
 \begin{quote}{http://www.ncbi.nlm.nih.gov/books/NBK1762/}
 \end{quote}
-Installation on a Mac is fairly straightforward: the dmg file includes a .pkg that installs everything automatically on your system. Installation on a PC is more complicated; you may consider installing a virtual machine (for example using the program VirtualBox) that runs a Linux OS, and using this machine for all your BLASTing needs. Not to worry: the NCBI manual gives a very detailed step-to-step description of the installation. Installation on Linux can be done manually, or using the command line (the following example is for UBUNTU):
+Installation on a Mac is fairly straightforward: the dmg file includes a .pkg that installs everything automatically on your system. Installation on a PC is more complicated; you may consider installing a virtual machine (for example using the program VirtualBox) that runs a Linux OS, and using this machine for all your BLASTing needs. Not to worry, though: the NCBI manual gives a very detailed step-to-step description of the installation on a PC. Installation on Linux can be done manually, or using the command line (the following example is for UBUNTU):
 \begin{quote}
 \begin{verbatim}
 $ sudo apt-get install blast2
@@ -41,7 +41,7 @@ Follow the instructions provided by NCBI in the BLAST user manual to generate a 
 $ makeblastdb -in path/to/genome.fa -dbtype nucl
 \end{verbatim}
 \end{quote}
-The above example uses DNA sequences (-dbtype nucl); for a protein database you shoulr replace 'nucl' with 'prot'.
+The above example uses DNA sequences (-dbtype nucl); for a protein database you should replace `nucl' with `prot'.
 \section{Running BLAST}
 Open a command line terminal (Terminal on Mac and Linux, Command Prompt on a PC), and go to your BLAST directory (it is advisable to make a directory containing all your BLAST-related files and scripts in one conveniently organized location). If you have never worked with the terminal before, here are some useful UNIX commands (most will work on Linux and Mac terminals; PC is slightly different):
 \begin{quote}
@@ -53,11 +53,11 @@ To run your first BLAST, make sure you have a formatted database (and know its l
 $ tblastn -query query.txt -db path/to/genome.fa -out output.txt
 \end{verbatim}
 \end{quote}
-Instead of 'tblastn' you can of course also use other BLAST algorithms, such as 'blastn' or 'tblastx'.\par
+Instead of 'tblastn' you can of course also use other BLAST algorithms, such as `blastn' or `tblastx'.\par
 Your BLAST is now complete! Open the output.txt file to view the results.
 
 \section{Interpreting BLAST results}
-Your BLAST outputfile will show you the alignment of your query with various sequences in the reference genome. Unfortunately it will not show you what those sequences are, or what comes before and after the hit. If you want to find this out, you need to go into the genome fasta file, find the start and end sites of your hits (they are indicated by the numbers in the "Sbjct" line), and get the corresponding sequence.\par
+Your BLAST outputfile will show you the alignment of your query with various sequences in the reference genome. Unfortunately it will not show you what those sequences are, or what comes before and after the hit. If you want to find this out, you need to go into the genome fasta file, find the start and end sites of your hits (they are indicated by the numbers in the `Sbjct' line), and get the corresponding sequence.\par
 However, especially with large scaffolds, this can be a pain! To solve this problem, I wrote a python script that will collect the scaffolds that contain hits, as well as those parts of each scaffold to which the query maps. You can find it at
 \begin{quote}https://github.com/bvreede/annotation/blob/master/readblast.py
 \end{quote}
