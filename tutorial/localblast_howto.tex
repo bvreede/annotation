@@ -1,0 +1,41 @@
+\documentclass[11pt]{article}
+
+\title{Running the BLAST algorithm locally}
+\author{Barbara M.I. Vreede}
+
+\begin{document}
+\maketitle
+\section{Installing BLAST}
+\subsection{Mac}
+Mac users have it very easy: go to 
+\subsection{PC}
+The easiest way that I can think of to run BLAST locally on a PC is to install a virtual machine that runs a linux OS. 
+Install virtualbox from [site], and 
+
+\subsection{Linux}
+
+\section{Preparing BLAST}
+makeblastdb
+all binaries in path?
+
+\section{Running BLAST}
+tblastn
+
+\begin{quote}
+\begin{verbatim}
+$ tblastn -query path/to/queryfile -db path/to/genome -out outputfiles
+\end{verbatim}
+\end{quote}
+
+
+\section{Interpreting BLAST results}
+Your BLAST outputfile will show you the alignment of your query with various sequences in the reference genome. Unfortunately it will not show you what those sequences are, or what comes before and after the hit. If you want to find this out, you need to go into the genome fasta file, find the start and end sites of your hits (they are indicated by the numbers in the "Sbjct" line), and get the corresponding sequence. Especially with large scaffolds, this can be a pain! To solve this problem, I wrote a python script that will collect the scaffolds that contain hits, as well as those parts of each scaffold to which the query maps. You can find it at github.com/bvreede/annotation/blob/master/readblast.py.\par
+The script takes three arguments: the reference genome, the output file from your blast, and an (optional) number. This is the number of nucleotides you want to add to the beginning and the end of the sequence: for example, if your blast hit corresponds to nucleotides 3500-3560 of a scaffold and you provide the number 200, the programme will save nucleotides 3300-3760. If you don't provide a number, the default setting is 100.
+\begin{quote}
+\begin{verbatim}
+$ python readblast.py path/to/genome.fa path/to/outputfile 500
+\end{verbatim}
+\end{quote}
+
+\end{document}
+
