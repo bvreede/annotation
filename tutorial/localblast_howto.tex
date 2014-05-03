@@ -1,41 +1,75 @@
-\documentclass[11pt]{article}
+\documentclass[12pt]{article}
+\addtolength{\textwidth}{50pt}
+\addtolength{\evensidemargin}{-25pt}
+\addtolength{\oddsidemargin}{-25pt}
+\addtolength{\textheight}{50pt}
+\addtolength{\topmargin}{-25pt}
+
 
 \title{Running the BLAST algorithm locally}
 \author{Barbara M.I. Vreede}
 
 \begin{document}
 \maketitle
+The BLAST algorithm is indispensable nowadays, and it has been integrated in almost every genome website. Nevertheless, there are many occasions when it is not directly available: you may want to use the algorithm on a custom fasta file, or a newly released genome that does not use the established platforms just yet. In those situations it can be useful to install BLAST on your own machine, and use it locally. A few simple steps are all it takes!
 \section{Installing BLAST}
-\subsection{Mac}
-Mac users have it very easy: go to 
-\subsection{PC}
-The easiest way that I can think of to run BLAST locally on a PC is to install a virtual machine that runs a linux OS. 
-Install virtualbox from [site], and 
-
-\subsection{Linux}
-
-\section{Preparing BLAST}
-makeblastdb
-all binaries in path?
-
-\section{Running BLAST}
-tblastn
-
+Download the appropriate BLAST installation file for your system at:
+\begin{quote}
+{ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/}
+\end{quote}
+A user manual for the installation of BLAST in your OS can be found at:
+\begin{quote}{http://www.ncbi.nlm.nih.gov/books/NBK1762/}
+\end{quote}
+Installation on a Mac is fairly straightforward: the dmg file includes a .pkg that installs everything automatically on your system. Installation on a PC is more complicated; you may consider installing a virtual machine (for example using the program VirtualBox) that runs a Linux OS, and using this machine for all your BLASTing needs. Not to worry: the NCBI manual gives a very detailed step-to-step description of the installation. Installation on Linux can be done manually, or using the command line (the following example is for UBUNTU):
 \begin{quote}
 \begin{verbatim}
-$ tblastn -query path/to/queryfile -db path/to/genome -out outputfiles
+$ sudo apt-get install blast2
 \end{verbatim}
 \end{quote}
 
+\section{Preparing BLAST}
+You can download any of the i5K genomes from the following ftp server:
+\begin{quote}
+ftp://ftp.hgsc.bcm.edu/I5K-pilot/
+\end{quote}
+For your genome of interest, download a fasta file with the genome sequences. For example, for the \textit{Oncopeltus fasciatus} genome this is the following file:
+\begin{quote}{ftp://ftp.hgsc.bcm.edu/I5K-pilot/Milkweed\_bug/genome\_assemblies/NCBI-submitted/Ofas.contaminationfree.scaffolds}
+\end{quote}
+Follow the instructions provided by NCBI in the BLAST user manual to generate a database from a custom fasta file, using the makeblastdb utility. This can be done from the terminal (see section 3), using the following command:
+\begin{quote}
+\begin{verbatim}
+$ makeblastdb -in path/to/genome.fa -dbtype nucl
+\end{verbatim}
+\end{quote}
+The above example uses DNA sequences (-dbtype nucl); for a protein database you shoulr replace 'nucl' with 'prot'.
+\section{Running BLAST}
+Open a command line terminal (Terminal on Mac and Linux, Command Prompt on a PC), and go to your BLAST directory (it is advisable to make a directory containing all your BLAST-related files and scripts in one conveniently organized location). If you have never worked with the terminal before, here are some useful UNIX commands (most will work on Linux and Mac terminals; PC is slightly different):
+\begin{quote}
+http://mally.stanford.edu/~sr/computing/basic-unix.html
+\end{quote}
+To run your first BLAST, make sure you have a formatted database (and know its location!) and a text file that contains \textit{only} the sequence of your query (aminoacid or nucleotide sequence). Now, you can BLAST this query against your genome database, using the following command:
+\begin{quote}
+\begin{verbatim}
+$ tblastn -query query.txt -db path/to/genome.fa -out output.txt
+\end{verbatim}
+\end{quote}
+Instead of 'tblastn' you can of course also use other BLAST algorithms, such as 'blastn' or 'tblastx'.\par
+Your BLAST is now complete! Open the output.txt file to view the results.
 
 \section{Interpreting BLAST results}
-Your BLAST outputfile will show you the alignment of your query with various sequences in the reference genome. Unfortunately it will not show you what those sequences are, or what comes before and after the hit. If you want to find this out, you need to go into the genome fasta file, find the start and end sites of your hits (they are indicated by the numbers in the "Sbjct" line), and get the corresponding sequence. Especially with large scaffolds, this can be a pain! To solve this problem, I wrote a python script that will collect the scaffolds that contain hits, as well as those parts of each scaffold to which the query maps. You can find it at github.com/bvreede/annotation/blob/master/readblast.py.\par
-The script takes three arguments: the reference genome, the output file from your blast, and an (optional) number. This is the number of nucleotides you want to add to the beginning and the end of the sequence: for example, if your blast hit corresponds to nucleotides 3500-3560 of a scaffold and you provide the number 200, the programme will save nucleotides 3300-3760. If you don't provide a number, the default setting is 100.
+Your BLAST outputfile will show you the alignment of your query with various sequences in the reference genome. Unfortunately it will not show you what those sequences are, or what comes before and after the hit. If you want to find this out, you need to go into the genome fasta file, find the start and end sites of your hits (they are indicated by the numbers in the "Sbjct" line), and get the corresponding sequence.\par
+However, especially with large scaffolds, this can be a pain! To solve this problem, I wrote a python script that will collect the scaffolds that contain hits, as well as those parts of each scaffold to which the query maps. You can find it at
+\begin{quote}https://github.com/bvreede/annotation/blob/master/readblast.py
+\end{quote}
+The script takes three arguments: the reference genome, the output file from your blast, and an (optional) number. This is the number of nucleotides you want to add to the beginning and the end of the sequence: for example, if your blast hit corresponds to nucleotides 3500-3560 of a scaffold and you provide the number 200, the programme will save nucleotides 3300-3760. If you don't provide a number, the default setting is 100.\par
+This is how to run the script from the command line:
 \begin{quote}
 \begin{verbatim}
 $ python readblast.py path/to/genome.fa path/to/outputfile 500
 \end{verbatim}
 \end{quote}
-
+Every time you use the script, it will make a folder in your current directory that contains fasta files for all scaffolds (named ScaffoldX-entire.fa), as well as specific sequences per scaffold that were found by the BLAST algorithm (named ScaffoldX-blastresults.fa).\par
+\section*{I hope this helps!}
+If you have any questions, please get in touch: b.vreede@gmail.com.
 \end{document}
 
