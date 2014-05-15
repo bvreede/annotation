@@ -93,7 +93,10 @@ def reverser(CDSlist):
 		CDSlist.append(seqinv)
 	return CDSlist
 
-def exonfinder(fbid,genename): # collects individual exons from a flybase gene entry
+def exonfinder(fbid,genename): 
+	'''
+	collects individual exons from a flybase gene entry
+	'''
 	# open flybase page with corresponding ID: genome region
 	print "reading FlyBase entry for %s..." %genename	
 	region_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&dump=DecoratedFasta" %fbid
@@ -196,5 +199,4 @@ for gene in genelist:
 
 
 
-### perform blast on all protein sequences ###
 
