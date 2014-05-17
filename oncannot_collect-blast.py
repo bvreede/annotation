@@ -8,12 +8,31 @@ genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
 
 def translater(seq):
-	#add here translater
-	seq1 = Seq(seq, IUPAC.unambiguous_dna)
-	trans1 = seq1.translate()
-	trans2 = "translation2"
-	trans3 = "translation3"
-	#print seq, trans2, trans1
+	'''
+	takes one DNA sequence and translates all three forward frames
+	(but only complete codons)
+	returns as follows: frame1, frame2, frame3
+	'''
+	if len(seq) % 3 == 0:
+		seq1 = seq
+		seq2 = seq[1:-2]
+		seq3 = seq[2:-1]
+	elif len(seq) % 3 == 1:
+		seq1 = seq[:-1]
+		seq2 = seq[1:]
+		seq3 = seq[2:-2]
+	else:
+		seq1 = seq[:-2]
+		seq2 = seq[1:-1]
+		seq3 = seq[2:]
+	frame = ["trans1", "trans2", "trans3"]
+	for seq, i in zip((seq1, seq2, seq3), frame):
+		seqt = Seq(seq, IUPAC.unambiguous_dna)
+		trans=seqt.translate()
+		#add here dictionary: trans variable with translation?
+	trans1 = "trans1"
+	trans2 = "trans2"
+	trans3 = "trans3"
 	return trans1, trans2, trans3
 
 
