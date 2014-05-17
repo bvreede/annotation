@@ -2,16 +2,18 @@ import csv, urllib2, re
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-inputdb = "segmentation_bicoid.csv"
+inputdb = "csv-input/segmentation_bicoid.csv"
 
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")
 
 def translater(seq):
 	#add here translater
-	trans1 = "translation1"
+	seq1 = Seq(seq, IUPAC.unambiguous_dna)
+	trans1 = seq1.translate()
 	trans2 = "translation2"
 	trans3 = "translation3"
+	#print seq, trans2, trans1
 	return trans1, trans2, trans3
 
 
