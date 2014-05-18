@@ -11,9 +11,12 @@ def translater(seq):
 	'''
 	takes one DNA sequence and translates all three forward frames
 	(but only complete codons)
-	returns as follows: frame1, frame2, frame3
+	returns frame1, frame2, frame3 as translated sequence objects.
 	'''
-	if len(seq) % 3 == 0:
+	if len(seq) == 0:
+		print "error: empty sequence entered in translater"
+		return ["err","err","err"]
+	elif len(seq) % 3 == 0:
 		seq1 = seq
 		seq2 = seq[1:-2]
 		seq3 = seq[2:-1]
@@ -25,15 +28,11 @@ def translater(seq):
 		seq1 = seq[:-2]
 		seq2 = seq[1:-1]
 		seq3 = seq[2:]
-	frame = ["trans1", "trans2", "trans3"]
-	for seq, i in zip((seq1, seq2, seq3), frame):
+	trans = {}
+	for seq, i in zip((seq1, seq2, seq3), range(3)):
 		seqt = Seq(seq, IUPAC.unambiguous_dna)
-		trans=seqt.translate()
-		#add here dictionary: trans variable with translation?
-	trans1 = "trans1"
-	trans2 = "trans2"
-	trans3 = "trans3"
-	return trans1, trans2, trans3
+		trans[i]=seqt.translate()
+	return trans[0], trans[1], trans[2]
 
 
 def prot_exons(isolist):
@@ -217,6 +216,7 @@ for gene in genelist:
 	chromrev = exonfinder(fbid,genename)
 	if chromrev[0] != "err":
 		proteinscan(fbid,chromrev[0],genename,chromrev[1])
+
 
 
 
