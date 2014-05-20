@@ -76,9 +76,9 @@ def isolator(isolist):
 				check = isolist2[n]			#make the test entry a new check
 	return pop
 
-def chrom(fbid):
+def locfinder(fbid):
 	'''
-	Goes to flybase page of gene and returns the sequence
+	Takes flybase ID of a gene and returns its sequence
 	location, which includes the chromosome as well as the
 	orientation of the gene.
 	'''
@@ -130,10 +130,13 @@ def proteinscan(fbid,chrom,genename,revflag):
 for gene in genelist:
 	fbid = gene[0]
 	genename = gene[1]
-	chromloc=chrom(fbid)
-	print genename, chromloc
-	
-
+	chromloc=locfinder(fbid)
+	chrom = chromloc.split(':')[0]
+	if chrom == "err":
+		print "Error in gene %s at http://flybase.org/reports/%s.html.\nContinuing..." %(genename, fbid)
+		continue
+	dirx = chromloc[-2]
+	print genename, chrom, dirx
 
 
 
