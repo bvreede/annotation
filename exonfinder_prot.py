@@ -31,7 +31,7 @@ def prot_exons(isolist):
 		isolist_p.append(eexp_i) #appends end location of exon to list
 	return isolist_p
 		
-def prot_dict(isolist,isolist_p,isoseq):
+def prot_dict(isolist,isolist_p,isoseq,dirx):
 	'''
 	Takes the list of exon locations per isoform ('nnnnnn..nnnnnn') and uses it as keys;
 	uses the isolist_p list (made in the prot_exons module) with start and end sites to
@@ -39,11 +39,15 @@ def prot_dict(isolist,isolist_p,isoseq):
 	Returns a dictionary with exon locations as keys, and the sequence as values.
 	'''
 	isodict = {}
+	if dirx == '-':
+		isoseq = isoseq[::-1]
 	for i in range(len(isolist)):
 		exon = isolist[i] #identifier of the exon is the 'nnnnn..nnnn' genomic location
 		start = isolist_p[i*2] #start site is found in the protein index list isolist_p; there are twice as many items in this list (start, end, start, end) so identifier has to be multiplied
 		end=isolist_p[i*2+1]
-		sequence = isoseq[start:end] #gets the right string for this exon from the total sequence 
+		sequence = isoseq[start:end] #gets the right string for this exon from the total sequence
+		if dirx == '-':
+			sequence = sequence[::-1]
 		isodict[exon] = sequence #saves in dictionary: the exon-specific sequence with the exon identifier as key
 	return isodict
 
@@ -91,7 +95,13 @@ def locfinder(fbid):
 			chromloc = seqloc.search(line).group()
 	return chromloc
 
-def proteinscan(fbid,chrom,genename,revflag):
+def proteinscan(fbid,chrom,genename,dirx):
+	'''
+	Takes a gene's flybase ID, chromosome and orientation and goes
+	to its translation fasta page.
+	Calls prot_exons and prot_dict.
+	Returns dictionary of individual exons and their sequence.
+	'''
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
 	isoseq = ""
@@ -102,7 +112,7 @@ def proteinscan(fbid,chrom,genename,revflag):
 	for line in transl_xml:
 		if line[0]== ">": # this line has the fasta header
 			isolist_p = prot_exons(isolist) #get corresponding protein start-end sites from chromosomal start-end sites
-			isodict = prot_dict(isolist,isolist_p,isoseq) #put all in dictionary
+			isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 			genedict.update(isodict)
 			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line).group() #parses out the exon locations used for this isoform
 			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
@@ -116,7 +126,7 @@ def proteinscan(fbid,chrom,genename,revflag):
 			isoseq += line.strip()
 	#what follows now is a repeat so that the last exon is included
 	isolist_p = prot_exons(isolist)
-	isodict = prot_dict(isolist,isolist_p,isoseq) #put all in dictionary
+	isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 	genedict.update(isodict)
 	#end of repeat code
 	pop = isolator(isolist_collect)
@@ -124,8 +134,7 @@ def proteinscan(fbid,chrom,genename,revflag):
 		i = [str(k[0]),str(k[1])] #make string to enable joining
 		popkey = "..".join(i)
 		del genedict[popkey]
-	print genedict
-
+	return genedict
 
 for gene in genelist:
 	fbid = gene[0]
@@ -136,8 +145,4 @@ for gene in genelist:
 		print "Error in gene %s at http://flybase.org/reports/%s.html.\nContinuing..." %(genename, fbid)
 		continue
 	dirx = chromloc[-2]
-	print genename, chrom, dirx
-
-
-
-
+	genedict = proteinscan(fbid,chrom,genename,dirx)
