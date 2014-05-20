@@ -95,11 +95,11 @@ def locfinder(fbid):
 			chromloc = seqloc.search(line).group()
 	return chromloc
 
-def proteinscan(fbid,chrom,genename,dirx):
+def proteinscan(fbid,chrom,dirx):
 	'''
 	Takes a gene's flybase ID, chromosome and orientation and goes
 	to its translation fasta page.
-	Calls prot_exons and prot_dict.
+	Calls prot_exons and prot_dict, and isolator to remove duplicates.
 	Returns dictionary of individual exons and their sequence.
 	'''
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
@@ -142,7 +142,14 @@ for gene in genelist:
 	chromloc=locfinder(fbid)
 	chrom = chromloc.split(':')[0]
 	if chrom == "err":
-		print "Error in gene %s at http://flybase.org/reports/%s.html.\nContinuing..." %(genename, fbid)
+		print "Error in gene '%s' at http://flybase.org/reports/%s.html.\nContinuing..." %(genename, fbid)
 		continue
 	dirx = chromloc[-2]
-	genedict = proteinscan(fbid,chrom,genename,dirx)
+	genedict = proteinscan(fbid,chrom,dirx)
+	exons = 0
+	for exon in genedict:
+		output.write("%s,%s,%s,%s\n" %(fbid,genename,exon,genedict[exon]))
+		exons += 1
+	print "For gene '%s': %s exons saved." %(genename,exons)
+
+output.close()
