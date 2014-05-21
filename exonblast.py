@@ -1,18 +1,21 @@
 import csv, os, time, sys
 
-
 if len(sys.argv) <= 1:
 	sys.exit("USAGE: python exonblast.py path/to/inputfile")
 
 inputdb = sys.argv[1] # input file
-
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blasttype = "tblastn"
-output = inputdb[:-4] + "-blastres.csv"
-
-tempin = open('tempin.txt','w') # will be used to store exon sequences temporarily in a file so they can be blasted
+output = inputdb[:-10] + "-blast.csv"
 exonlist = csv.reader(open(inputdb))
+ex_in_scaf = open(output,"w")
 
+#tempin = open('tempin.txt','w') # will be used to store exon sequences temporarily in a file so they can be blasted
+
+if os.path.exists("blastoutput"):
+	pass
+else:
+	os.mkdir("blastoutput")
 
 '''
 MODULE TAKEN FROM READBLAST.PY:
@@ -59,7 +62,6 @@ def blastreader(blast):
 			break
 	return mainlist
 
-ex_in_scaf = open(output,"w")
 for exon in exonlist:
 	fbid = exon[0]
 	genename = exon[1]
@@ -68,10 +70,11 @@ for exon in exonlist:
 	tempin = open("tempin.txt","w")
 	tempin.write(seq)
 	tempin.close()
-	blast = "%s -db %s -query tempin.txt -out tempout.txt" %(blasttype,genome)
+	blastout = "blastoutput/%s_%s" %(fbid,exID,)
+	blast = "%s -db %s -query tempin.txt -out %s" %(blasttype,genome,blastout)
 	os.system(blast)
-	tempout = open("tempout.txt")	
-	mainlist = blastreader(tempout)
+	blastout = open(blastout)	
+	mainlist = blastreader(blastout)
 	if len(mainlist) <= 0:
 		print "no blastresults for exon", exID
 		ex_in_scaf.write("%s,%s,%s\n" %(fbid,genename,exID))
@@ -81,8 +84,7 @@ for exon in exonlist:
 		start = mainlist[0][2]
 		end = mainlist[0][3]
 		ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,scaffold,dirx,start,end))
-	tempout.close()
+	blastout.close()
 ex_in_scaf.close()
 tempin.close()
 os.remove("tempin.txt")
-os.remove("tempout.txt")
