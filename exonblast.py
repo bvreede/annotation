@@ -1,19 +1,16 @@
 import csv, os, time
 
-inputdb = "csv-input/segmentation_short-output.csv"
+inputdb = "csv-input/segmentation_bicoid-output.csv"
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blasttype = "tblastn"
-
-time = int(time.time())
-dir_out = "output-%s" %(time)
-os.mkdir(dir_out)
+output = inputdb[:-4] + "-blastres.csv"
 
 tempin = open('tempin.txt','w') # will be used to store exon sequences temporarily in a file so they can be blasted
 exonlist = csv.reader(open(inputdb))
 
 
 '''
-FROM READBLAST.PY:
+MODULE TAKEN FROM READBLAST.PY:
 reads the output file and returns info needed to extract from the
 genome fasta file:
 * Scaffold number
@@ -57,44 +54,30 @@ def blastreader(blast):
 			break
 	return mainlist
 
-fbid = ""
+ex_in_scaf = open(output,"w")
 for exon in exonlist:
+	fbid = exon[0]
 	genename = exon[1]
 	exID = exon[2]
 	seq = exon[3]
-	#tempin.truncate(0)
 	tempin = open("tempin.txt","w")
 	tempin.write(seq)
 	tempin.close()
-	print seq
 	blast = "%s -db %s -query tempin.txt -out tempout.txt" %(blasttype,genome)
-	print blast
 	os.system(blast)
-	tempout = open("tempout.txt")
-	if exon[0] == fbid:
-		mainlist = blastreader(tempout)
-		#ex_in_scaf.write("%s,%s,%s,%s,%s\n" %(exID,mainlist[0],mainlist[1],mainlist[2],mainlist[3]))
+	tempout = open("tempout.txt")	
+	mainlist = blastreader(tempout)
+	if len(mainlist) <= 0:
+		print "no blastresults for exon", exID
+		ex_in_scaf.write("%s,%s,%s\n" %(fbid,genename,exID))
 	else:
-		#if fbid != "":
-			#ex_in_scaf.close() # close old file (only if this is not the first loop)
-		fbid = exon[0]
-		#genomeloc = "%s/%s_genomeloc.csv" %(dir_out, fbid)
-		#ex_in_scaf = open(genomeloc,"w")	
-		mainlist = blastreader(tempout)
-		#ex_in_scaf.write("%s,%s,%s,%s,%s\n" %(exID,mainlist[0],mainlist[1],mainlist[2],mainlist[3]))
-	print genename, exID, mainlist
+		scaffold = mainlist[0][0]
+		dirx = mainlist[0][1]
+		start = mainlist[0][2]
+		end = mainlist[0][3]
+		ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,scaffold,dirx,start,end))
 	tempout.close()
-
-#ex_in_scaf.close()
+ex_in_scaf.close()
 tempin.close()
-#os.remove("tempin.txt")
-#os.remove("tempout.txt")
-
-
-'''
-	if exon[0] == fbid:
-		# do the stuff you need to do when still working with the same gene
-	else:
-		# start a new gene
-		fbid = exon[0]
-'''
+os.remove("tempin.txt")
+os.remove("tempout.txt")
