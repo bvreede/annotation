@@ -2,7 +2,11 @@ import csv, urllib2, re
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-inputdb = "csv-input/segmentation_short.csv"
+
+if len(sys.argv) <= 1:
+	sys.exit("USAGE: python exonfinder.py path/to/inputfile")
+
+inputdb = sys.argv[1] # input file
 
 genelist = csv.reader(open(inputdb))
 output = open("%s-output.csv" %(inputdb[:-4]),"w")

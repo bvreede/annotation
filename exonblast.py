@@ -1,6 +1,11 @@
-import csv, os, time
+import csv, os, time, sys
 
-inputdb = "csv-input/segmentation_bicoid-output.csv"
+
+if len(sys.argv) <= 1:
+	sys.exit("USAGE: python exonblast.py path/to/inputfile")
+
+inputdb = sys.argv[1] # input file
+
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blasttype = "tblastn"
 output = inputdb[:-4] + "-blastres.csv"
