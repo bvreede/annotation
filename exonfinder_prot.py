@@ -1,4 +1,4 @@
-import csv, urllib2, re
+import csv, urllib2, re, sys
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
