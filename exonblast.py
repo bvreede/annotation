@@ -6,7 +6,7 @@ if len(sys.argv) <= 1:
 inputdb = sys.argv[1] # input file
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blasttype = "tblastn"
-output = inputdb[:-10] + "-blast.csv"
+output = inputdb[:-10] + "blast.csv"
 exonlist = csv.reader(open(inputdb))
 ex_in_scaf = open(output,"w")
 
@@ -75,15 +75,19 @@ for exon in exonlist:
 	os.system(blast)
 	blastout = open(blastout)	
 	mainlist = blastreader(blastout)
+	for i in range(len(mainlist)):
+		if i >= 5:
+			continue
+		scaffold = mainlist[i][0]
+		dirx = mainlist[i][1]
+		start = mainlist[i][2]
+		end = mainlist[i][3]
+		ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,i+1,scaffold,dirx,start,end))
 	if len(mainlist) <= 0:
 		print "no blastresults for exon", exID
 		ex_in_scaf.write("%s,%s,%s\n" %(fbid,genename,exID))
 	else:
-		scaffold = mainlist[0][0]
-		dirx = mainlist[0][1]
-		start = mainlist[0][2]
-		end = mainlist[0][3]
-		ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,scaffold,dirx,start,end))
+		print len(mainlist), "blastresults for exon", exID
 	blastout.close()
 ex_in_scaf.close()
 tempin.close()
