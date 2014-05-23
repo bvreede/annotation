@@ -6,7 +6,7 @@ if len(sys.argv) <= 1:
 inputdb = sys.argv[1] # input file
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blasttype = "tblastn"
-output = inputdb[:-10] + "blast.csv"
+output = inputdb[:-10] + "-blast.csv"
 exonlist = csv.reader(open(inputdb))
 ex_in_scaf = open(output,"w")
 

@@ -9,8 +9,7 @@ if len(sys.argv) <= 1:
 inputdb = sys.argv[1] # input file
 
 genelist = csv.reader(open(inputdb))
-output = open("%s-output.csv" %(inputdb[:-4]),"w")
-
+output = open("%s-exons.csv" %(inputdb[:-4]),"w")
 
 def prot_exons(isolist):
 	'''
