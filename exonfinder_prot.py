@@ -1,15 +1,42 @@
-import csv, urllib2, re, sys
+import csv, urllib2, re, sys, os
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
 
 if len(sys.argv) <= 1:
-	sys.exit("USAGE: python exonfinder.py path/to/inputfile")
+	sys.exit("USAGE: python exonfinder_prot.py path/to/inputfile (list of flybase IDs and genenames in csv)")
 
 inputdb = sys.argv[1] # input file
+inputname = inputdb.split("/")[-1]
+
+outputfolder = "csv-output"
+if os.path.exists(outputfolder):
+	pass
+else:
+	os.mkdir(outputfolder)
+
+metafolder = "blastmeta"
+if os.path.exists(metafolder):
+	pass
+else:
+	os.mkdir(metafolder)
 
 genelist = csv.reader(open(inputdb))
-output = open("%s-exons.csv" %(inputdb[:-4]),"w")
+output = open("%s/%s-exons.csv" %(outputfolder,inputname[:-4]),"w")
+
+def metaextract(header,genemeta):
+	protID = header.split()[0][1:]
+	tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(header).group() #parses out the exon locations used for this isoform
+	tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
+	tag3 = "".join(tag2)
+	exons = tag3.replace(',','\n')
+	tag4 = re.compile('name=[A-Z|a-z|-]*').search(header)
+	if tag4 == None:
+		name = ''
+	else:
+		tag5 = tag4.group() # parses out isoform name
+		name = tag5[5:]
+	genemeta.write("ProtID = %s\nIsoform = %s\n%s\n\n" %(protID,name,exons))
 
 def prot_exons(isolist):
 	'''
@@ -107,6 +134,7 @@ def proteinscan(fbid,chrom,dirx):
 	'''
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
+	genemeta = open("%s/%s_isoforms.txt" %(metafolder,fbid),"w")
 	isoseq = ""
 	isolist = []
 	isolist_collect = []
@@ -114,6 +142,7 @@ def proteinscan(fbid,chrom,dirx):
 	genedict = {}
 	for line in transl_xml:
 		if line[0]== ">": # this line has the fasta header
+			metaextract(line,genemeta)
 			isolist_p = prot_exons(isolist) #get corresponding protein start-end sites from chromosomal start-end sites
 			isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 			genedict.update(isodict)
@@ -137,6 +166,7 @@ def proteinscan(fbid,chrom,dirx):
 		i = [str(k[0]),str(k[1])] #make string to enable joining
 		popkey = "..".join(i)
 		del genedict[popkey]
+	genemeta.close()
 	return genedict
 
 for gene in genelist:
@@ -145,7 +175,7 @@ for gene in genelist:
 	chromloc=locfinder(fbid)
 	chrom = chromloc.split(':')[0]
 	if chrom == "err":
-		print "Error in gene '%s' at http://flybase.org/reports/%s.html.\nContinuing..." %(genename, fbid)
+		print "Error finding flybase info gene '%s' at http://flybase.org/reports/%s.html.\nContinuing..." %(genename, fbid)
 		continue
 	dirx = chromloc[-2]
 	genedict = proteinscan(fbid,chrom,dirx)
