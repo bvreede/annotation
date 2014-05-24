@@ -2,7 +2,7 @@ import csv, sys, os
 
 
 if len(sys.argv) <= 1:
-	sys.exit("USAGE: python exonfinder.py path/to/inputfile (result from exonblast.py)")
+	sys.exit("USAGE: python blastalign.py path/to/inputfile (result from exonblast.py)")
 
 inputdb = sys.argv[1] # input file
 blastlist = csv.reader(open(inputdb))
@@ -15,7 +15,7 @@ if os.path.exists(outputfolder):
 else:
 	os.mkdir(outputfolder)
 
-
+fbid = ""
 for line in blastlist:
 	if line[0] != fbid:
 		output.close()
