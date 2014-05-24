@@ -45,13 +45,17 @@ def scaffoldextract(scaffold):
 			outputfile.write(line.strip())
 
 def scaffoldfind(blastresults,output):
-	fbid = blastresults[0][0]
-	genename = blastresults[0][1]
 	scaffolds = []
 	scafdict = {}
+	newres = []
 	for r in blastresults:
 		if len(r) > 4:
 			scaffolds.append(r[4])
+			if type(r[2]) == list: 
+				r[2].append(r[4])
+			else:
+				r[2] = [r[4]]
+			print r[2]
 	for s in scaffolds:
 		n = scaffolds.count(s)
 		scafdict[s] = n
@@ -59,6 +63,20 @@ def scaffoldfind(blastresults,output):
 	k = list(scafdict.keys())
 	scaffold = k[v.index(max(v))]
 	scaffoldextract(scaffold)
+	'''
+	exon = ""
+	scafcheck = []
+	for t in newres:
+		if t[2] != exon:
+			if scaffold not in scafcheck and len(scafcheck) > 0:
+				
+			exon = t[2]
+			scafcheck = []
+			scafcheck.append(t[4])
+		else:
+			scafcheck.append(t[4])
+	if scaffold not in scafcheck and len(scafcheck) >0:
+	'''	
 	return scaffold
 	
 
