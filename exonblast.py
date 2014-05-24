@@ -1,12 +1,15 @@
 import csv, os, time, sys
 
 if len(sys.argv) <= 1:
-	sys.exit("USAGE: python exonblast.py path/to/inputfile")
+	sys.exit("USAGE: python exonblast.py path/to/inputfile (result from exonfinder_prot.py)")
 
 inputdb = sys.argv[1] # input file
+inputname = inputdb.split("/")[-1]
+
 genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blasttype = "tblastn"
-output = inputdb[:-10] + "-blast.csv"
+outputfolder = "csv-output"
+output = outputfolder + "/" + inputname[:-10] + "-blast.csv"
 exonlist = csv.reader(open(inputdb))
 ex_in_scaf = open(output,"w")
 
@@ -84,7 +87,7 @@ for exon in exonlist:
 		end = mainlist[i][3]
 		ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,i+1,scaffold,dirx,start,end))
 	if len(mainlist) <= 0:
-		print "no blastresults for exon", exID
+		print "no blastresults for gene %s, exon %s" %(genename, exID)
 		ex_in_scaf.write("%s,%s,%s\n" %(fbid,genename,exID))
 	else:
 		print len(mainlist), "blastresults for exon", exID
