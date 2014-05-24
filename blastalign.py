@@ -51,32 +51,33 @@ def scaffoldfind(blastresults,output):
 	for r in blastresults:
 		if len(r) > 4:
 			scaffolds.append(r[4])
-			if type(r[2]) == list: 
-				r[2].append(r[4])
-			else:
-				r[2] = [r[4]]
-			print r[2]
+			newres.append(r)
 	for s in scaffolds:
 		n = scaffolds.count(s)
 		scafdict[s] = n
 	v = list(scafdict.values())
 	k = list(scafdict.keys())
 	scaffold = k[v.index(max(v))]
+	v.remove(max(v))
+	k.remove(scaffold)
+	scaffold2 = k[v.index(max(v))]
 	scaffoldextract(scaffold)
-	'''
+	scaffoldextract(scaffold2)
 	exon = ""
 	scafcheck = []
 	for t in newres:
 		if t[2] != exon:
 			if scaffold not in scafcheck and len(scafcheck) > 0:
-				
+				if scaffold2 not in scafcheck:
+					print t[1], exon, scafcheck, scaffold, scaffold2
 			exon = t[2]
 			scafcheck = []
 			scafcheck.append(t[4])
 		else:
 			scafcheck.append(t[4])
 	if scaffold not in scafcheck and len(scafcheck) >0:
-	'''	
+		if scaffold2 not in scafcheck:
+			print t[1], exon, scafcheck, scaffold, scaffold2
 	return scaffold
 	
 
