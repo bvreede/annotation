@@ -21,6 +21,46 @@ if os.path.exists(scaffolder):
 else:
 	os.mkdir(scaffolder)
 
+
+def align(to_align,scaffold,direction,genemeta)
+
+
+'''
+From matrix of results (curated blastresults: only those
+that are actual blast hits -- 'newres' from the scaffoldfind
+module -- are used) and the most common scaffold it isolates
+only those hits which are against this scaffold.
+Also checks directions, removes errors in directions, and posts
+info to the meta file.
+'''
+def isolateresults(blastresults,scaffold,genemeta):
+	newres2 = []
+	dirx = []
+	for r in blastresults:
+		if r[4] == scaffold:
+			newres2.append(r)
+			dirx.append(r[5][0])
+	if dirx.count('+') == (0 or len(dirx)):
+		direction = dirx[0]
+		pass
+	else:
+		if dirx.count('+') > dirx.count('-'):
+			direction = '+'
+		elif dirx.count('-') > dirx.count('+'):
+			direction = '-'
+		else:
+			direction = 'X'
+	newres2.append(direction)
+	remove = []
+	for i in range(len(dirx)):
+		if dirx[i] != direction:
+			genemeta.write("%s hit %s: reverse orientation, removed.\n" %(newres2[i][2], newres2[i][3]))
+			remove.append(i)
+	for i in remove[::-1]:
+		newres2.pop(i)
+	return newres2
+
+
 '''
 MODULE TAKEN FROM READBLAST.PY (and modified):
 Goes into genome fasta file and collects the appropriate 
@@ -69,14 +109,6 @@ def scaffoldfind(blastresults):
 	scaffold = k[v.index(max(v))] # finds the FIRST scaffold with the highest occurrence
 	scaffoldextract(scaffold)
 	genemeta.write("Most common scaffold: %s\n" %(scaffold))
-	'''
-	FOLLOWING BIT WRITTEN TO ENSURE ALL EXONS ARE INCLUDED IN SCAFFOLD
-	BUT MAY BE SUPERFLUOUS
-	v.remove(max(v))
-	k.remove(scaffold)
-	scaffold2 = k[v.index(max(v))]
-	scaffoldextract(scaffold2)
-	'''
 	exon = ""
 	scafcheck = []
 	for t in newres:
@@ -90,9 +122,12 @@ def scaffoldfind(blastresults):
 			scafcheck.append(t[4])
 	if scaffold not in scafcheck and len(scafcheck) >0:
 		genemeta.write("Exon %s blasts against %s\n" %(exon,scafcheck))
+	blasted = isolateresults(newres,scaffold,genemeta)
+	direction = blasted[-1]
+	to_align = blasted[:-1]
+	align(to_align,scaffold,direction,genemeta)
 	genemeta.close()
 	return scaffold
-	
 
 fbid = ""
 blastresults = []
