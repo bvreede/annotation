@@ -10,6 +10,7 @@ blastlist = csv.reader(open(inputdb))
 outputfolder = "alignments"
 scaffolder = genome.split('/')[-1][:-3] # name of genome fasta file minus .fa
 extra = 500 # n basepairs to add to scaffold sequence
+lline = 90
 
 if os.path.exists(outputfolder):
 	pass
@@ -20,7 +21,17 @@ if os.path.exists(scaffolder):
 else:
 	os.mkdir(scaffolder)
 
-
+'''
+to_align:
+[0] = fbid
+[1] = genename
+[2] = exonID
+[3] = exonnr
+[4] = scaffold
+[5] = frame
+[6] = start
+[7] = end
+'''
 def align(to_align,scaffold,direction):
 	fbid = to_align[0][0]
 	output = open("%s/%s-align.csv" %(outputfolder,fbid),"w")
@@ -35,11 +46,27 @@ def align(to_align,scaffold,direction):
 		startend.append(int(p[7]))
 	start = min(startend) - extra
 	end = max(startend) + extra
-	scafseq2 = scafseq[(start+1):end]
-	for i in range(len(scafseq2)/100):
-		output.write('%s %s\n' %(i*100+start, scafseq2[i*100:(i+1)*100]))
-	for k in to_align:
-		print k[2], len(k[2])
+	scafseq2 = scafseq[(start):end]
+	for i in range(len(scafseq2)/lline):
+		startline = i*lline + start # absolute sequence start site (in scaffold)
+		endline = (i+1)*lline + start
+		for e in to_align:
+			emin = min(int(e[6]),int(e[7]))
+			emax = max(int(e[6]),int(e[7]))
+			tag = "%s-%s (%s)" %(e[2],e[3],e[5])
+			space1=(28 - len(tag))*' ' # adds spaces to 'tag' to a total of 28
+			if emin >= startline and emin < endline:
+				space2=(emin-startline)*' '
+				align=(lline-len(space2))*'+'
+				output.write('%s%s %s%s\n' %(tag,space1,space2,align))
+			elif emax >= startline and emax < endline:
+				align=(emax-startline)*'+'
+				output.write('%s%s %s\n' %(tag,space1,align))
+			elif emin <= startline and emax >= endline:
+				align=lline*'+'
+				output.write('%s%s %s\n' %(tag,space1,align))
+		space = (28 - len(str(startline)))*' '# adds spaces to 'startline' to a total of 28
+		output.write('\n%s%s %s %s\n' %(space, startline, scafseq2[i*lline:(i+1)*lline], endline-1))
 	scaffile.close()
 	output.close()
 
