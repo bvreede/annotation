@@ -55,10 +55,12 @@ def scaffoldfind(blastresults):
 	scaffolds = []
 	scafdict = {}
 	newres = []
+	genemeta = open("blastmeta/%s_meta.txt" %(blastresults[0][0]), "a")
+	genemeta.write("\n\n++++SCAFFOLDS ISOLATED:++++\n\n")
 	for r in blastresults:
 		if len(r) > 4:
 			scaffolds.append(r[4])
-			newres.append(r)
+			newres.append(r) # ensures that only completed blasts are included in 'newres' matrix
 	for s in scaffolds: # put scaffold name and their occurrence count in a dictionary
 		n = scaffolds.count(s)
 		scafdict[s] = n
@@ -66,29 +68,29 @@ def scaffoldfind(blastresults):
 	k = list(scafdict.keys()) # list of scaffold names (order as in dictionary)
 	scaffold = k[v.index(max(v))] # finds the FIRST scaffold with the highest occurrence
 	scaffoldextract(scaffold)
-	''' 
+	genemeta.write("Most common scaffold: %s\n" %(scaffold))
+	'''
 	FOLLOWING BIT WRITTEN TO ENSURE ALL EXONS ARE INCLUDED IN SCAFFOLD
 	BUT MAY BE SUPERFLUOUS
 	v.remove(max(v))
 	k.remove(scaffold)
 	scaffold2 = k[v.index(max(v))]
 	scaffoldextract(scaffold2)
+	'''
 	exon = ""
 	scafcheck = []
 	for t in newres:
 		if t[2] != exon:
 			if scaffold not in scafcheck and len(scafcheck) > 0:
-				if scaffold2 not in scafcheck:
-					print t[1], exon, scafcheck, scaffold, scaffold2
+				genemeta.write("Exon %s blasts against %s\n" %(exon,scafcheck))
 			exon = t[2]
 			scafcheck = []
 			scafcheck.append(t[4])
 		else:
 			scafcheck.append(t[4])
 	if scaffold not in scafcheck and len(scafcheck) >0:
-		if scaffold2 not in scafcheck:
-			print t[1], exon, scafcheck, scaffold, scaffold2
-	'''
+		genemeta.write("Exon %s blasts against %s\n" %(exon,scafcheck))
+	genemeta.close()
 	return scaffold
 	
 
@@ -105,7 +107,7 @@ for line in blastlist:
 		blastresults.append(line)
 	else:
 		blastresults.append(line)
-scaffold = scaffoldfind(blastresults,output)
+scaffold = scaffoldfind(blastresults)
 
 output.close()
 os.remove("x.txt") # remove decoy outputfile
