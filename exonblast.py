@@ -70,6 +70,7 @@ for exon in exonlist:
 	genename = exon[1]
 	exID = exon[2]
 	seq = exon[3]
+	genemeta = open("blastmeta/%s_meta.txt" %(fbid), "a")
 	tempin = open("tempin.txt","w")
 	tempin.write(seq)
 	tempin.close()
@@ -86,11 +87,12 @@ for exon in exonlist:
 		start = mainlist[i][2]
 		end = mainlist[i][3]
 		ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,i+1,scaffold,dirx,start,end))
-	if len(mainlist) <= 0:
-		print "no blastresults for gene %s, exon %s" %(genename, exID)
+	if len(mainlist) == 0:
+		genemeta.write("%s results: None\n" %(exID))
 		ex_in_scaf.write("%s,%s,%s\n" %(fbid,genename,exID))
 	else:
-		print len(mainlist), "blastresults for exon", exID
+		genemeta.write("%s results: %s\n" %(exID, len(mainlist)))
+	genemeta.close()
 	blastout.close()
 ex_in_scaf.close()
 tempin.close()

@@ -134,7 +134,8 @@ def proteinscan(fbid,chrom,dirx):
 	'''
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
-	genemeta = open("%s/%s_isoforms.txt" %(metafolder,fbid),"w")
+	genemeta = open("%s/%s_meta.txt" %(metafolder,fbid),"w")
+	genemeta.write("++++ISOFORMS:++++\n\n")
 	isoseq = ""
 	isolist = []
 	isolist_collect = []
