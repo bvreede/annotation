@@ -8,7 +8,7 @@ genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 inputdb = sys.argv[1] # input file
 blastlist = csv.reader(open(inputdb))
 outputfolder = "alignments"
-scaffolder = genome.split('/')[-1][:-3]
+scaffolder = genome.split('/')[-1][:-3] # name of genome fasta file minus .fa
 
 output = open("x.txt","w") # decoy outputfile so that close statement can be used
 
@@ -24,7 +24,7 @@ else:
 '''
 MODULE TAKEN FROM READBLAST.PY (and modified):
 Goes into genome fasta file and collects the appropriate 
-scaffold; saves as separate fasta files.
+scaffold; saves the scaffold sequence as separate fasta file.
 '''
 def scaffoldextract(scaffold):
 	marker = 0 # is "1" when reading and saving scaffold sequence
@@ -44,7 +44,14 @@ def scaffoldextract(scaffold):
 		elif marker == 1:
 			outputfile.write(line.strip())
 
-def scaffoldfind(blastresults,output):
+'''
+Takes a matrix of blastresults from one gene (per result:
+[fbid,genename,exon,resultno,scaffold,direction,start,end])
+and finds the most common scaffold.
+Also calls the scaffoldextract module and saves the scaffold
+as a separate file.
+'''
+def scaffoldfind(blastresults):
 	scaffolds = []
 	scafdict = {}
 	newres = []
@@ -52,16 +59,19 @@ def scaffoldfind(blastresults,output):
 		if len(r) > 4:
 			scaffolds.append(r[4])
 			newres.append(r)
-	for s in scaffolds:
+	for s in scaffolds: # put scaffold name and their occurrence count in a dictionary
 		n = scaffolds.count(s)
 		scafdict[s] = n
-	v = list(scafdict.values())
-	k = list(scafdict.keys())
-	scaffold = k[v.index(max(v))]
+	v = list(scafdict.values()) # list of scaffold occurrences (order as in dictionary)
+	k = list(scafdict.keys()) # list of scaffold names (order as in dictionary)
+	scaffold = k[v.index(max(v))] # finds the FIRST scaffold with the highest occurrence
+	scaffoldextract(scaffold)
+	''' 
+	FOLLOWING BIT WRITTEN TO ENSURE ALL EXONS ARE INCLUDED IN SCAFFOLD
+	BUT MAY BE SUPERFLUOUS
 	v.remove(max(v))
 	k.remove(scaffold)
 	scaffold2 = k[v.index(max(v))]
-	scaffoldextract(scaffold)
 	scaffoldextract(scaffold2)
 	exon = ""
 	scafcheck = []
@@ -78,6 +88,7 @@ def scaffoldfind(blastresults,output):
 	if scaffold not in scafcheck and len(scafcheck) >0:
 		if scaffold2 not in scafcheck:
 			print t[1], exon, scafcheck, scaffold, scaffold2
+	'''
 	return scaffold
 	
 
@@ -86,7 +97,7 @@ blastresults = []
 for line in blastlist:
 	if line[0] != fbid:
 		if len(blastresults) != 0:
-			scaffold = scaffoldfind(blastresults,output)
+			scaffold = scaffoldfind(blastresults)
 		blastresults = []
 		output.close()
 		fbid = line[0]
