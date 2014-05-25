@@ -9,8 +9,7 @@ inputdb = sys.argv[1] # input file
 blastlist = csv.reader(open(inputdb))
 outputfolder = "alignments"
 scaffolder = genome.split('/')[-1][:-3] # name of genome fasta file minus .fa
-
-output = open("x.txt","w") # decoy outputfile so that close statement can be used
+extra = 500 # n basepairs to add to scaffold sequence
 
 if os.path.exists(outputfolder):
 	pass
@@ -22,8 +21,27 @@ else:
 	os.mkdir(scaffolder)
 
 
-def align(to_align,scaffold,direction,genemeta)
-
+def align(to_align,scaffold,direction):
+	fbid = to_align[0][0]
+	output = open("%s/%s-align.csv" %(outputfolder,fbid),"w")
+	scaffile = open("%s/%s.fa" %(scaffolder,scaffold))
+	scafseq = ''
+	for line in scaffile:
+		if line[0] != '>':
+			scafseq += line.strip()
+	startend = []
+	for p in to_align:
+		startend.append(int(p[6]))
+		startend.append(int(p[7]))
+	start = min(startend) - extra
+	end = max(startend) + extra
+	scafseq2 = scafseq[(start+1):end]
+	for i in range(len(scafseq2)/100):
+		output.write('%s %s\n' %(i*100+start, scafseq2[i*100:(i+1)*100]))
+	for k in to_align:
+		print k[2], len(k[2])
+	scaffile.close()
+	output.close()
 
 '''
 From matrix of results (curated blastresults: only those
@@ -87,7 +105,7 @@ def scaffoldextract(scaffold):
 '''
 Takes a matrix of blastresults from one gene (per result:
 [fbid,genename,exon,resultno,scaffold,direction,start,end])
-and finds the most common scaffold.
+and finds the most common scaffold and gene orientation.
 Also calls the scaffoldextract module and saves the scaffold
 as a separate file.
 '''
@@ -125,24 +143,21 @@ def scaffoldfind(blastresults):
 	blasted = isolateresults(newres,scaffold,genemeta)
 	direction = blasted[-1]
 	to_align = blasted[:-1]
-	align(to_align,scaffold,direction,genemeta)
 	genemeta.close()
-	return scaffold
+	align(to_align,scaffold,direction)
+	return scaffold, direction
 
 fbid = ""
 blastresults = []
 for line in blastlist:
 	if line[0] != fbid:
 		if len(blastresults) != 0:
-			scaffold = scaffoldfind(blastresults)
+			scaffold,direction = scaffoldfind(blastresults)
 		blastresults = []
-		output.close()
 		fbid = line[0]
-		output = open("%s/%s-align.csv" %(outputfolder,fbid),"w")
+		
 		blastresults.append(line)
 	else:
 		blastresults.append(line)
-scaffold = scaffoldfind(blastresults)
+scaffold,direction = scaffoldfind(blastresults)
 
-output.close()
-os.remove("x.txt") # remove decoy outputfile
