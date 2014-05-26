@@ -83,21 +83,20 @@ for exon in exonlist:
 	os.system(blast)
 	blastout = open(blastout)	
 	mainlist = blastreader(blastout)
-	for i in range(len(mainlist)):
-		#if i >= 10: # sets maximum number of results 
-		#	continue
-		scaffold = mainlist[i][0]
-		dirx = mainlist[i][1]
-		start = mainlist[i][2]
-		end = mainlist[i][3]
-		ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,i+1,scaffold,dirx,start,end))
 	if len(mainlist) == 0:
 		genemeta.write("%s results: None\n" %(exID))
 		ex_in_scaf.write("%s,%s,%s\n" %(fbid,genename,exID))
 	else:
+		for i in range(len(mainlist)):
+			scaffold = mainlist[i][0]
+			dirx = mainlist[i][1]
+			start = mainlist[i][2]
+			end = mainlist[i][3]
+			ex_in_scaf.write("%s,%s,%s,%s,%s,%s,%s,%s\n" %(fbid,genename,exID,i+1,scaffold,dirx,start,end))
 		genemeta.write("%s results: %s\n" %(exID, len(mainlist)))
 	genemeta.close()
 	blastout.close()
+	print "completed blast for gene '%s', exon '%s' with %s results" %(genename,exID,len(mainlist))
 ex_in_scaf.close()
 tempin.close()
 os.remove("tempin.txt")
