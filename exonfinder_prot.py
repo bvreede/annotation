@@ -9,20 +9,20 @@ if len(sys.argv) <= 1:
 inputdb = sys.argv[1] # input file
 inputname = inputdb.split("/")[-1]
 
-outputfolder = "csv-output"
+csvfolder = "csv"
+if os.path.exists(csvfolder):
+	pass
+else:
+	os.mkdir(csvfolder)
+
+outputfolder = "results"
 if os.path.exists(outputfolder):
 	pass
 else:
 	os.mkdir(outputfolder)
 
-metafolder = "blastmeta"
-if os.path.exists(metafolder):
-	pass
-else:
-	os.mkdir(metafolder)
-
 genelist = csv.reader(open(inputdb))
-output = open("%s/%s-exons.csv" %(outputfolder,inputname[:-4]),"w")
+output = open("%s/%s-exons.csv" %(csvfolder,inputname[:-4]),"w")
 
 def metaextract(header,genemeta):
 	protID = header.split()[0][1:]
@@ -125,7 +125,7 @@ def locfinder(fbid):
 			chromloc = seqloc.search(line).group()
 	return chromloc
 
-def proteinscan(fbid,chrom,dirx):
+def proteinscan(fbid,chrom,dirx,genename):
 	'''
 	Takes a gene's flybase ID, chromosome and orientation and goes
 	to its translation fasta page.
@@ -134,7 +134,7 @@ def proteinscan(fbid,chrom,dirx):
 	'''
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
-	genemeta = open("%s/%s_meta.txt" %(metafolder,fbid),"w")
+	genemeta = open("%s/%s-meta.txt" %(outputfolder,genename),"w")
 	genemeta.write("++++ISOFORMS:++++\n\n")
 	isoseq = ""
 	isolist = []
@@ -172,14 +172,14 @@ def proteinscan(fbid,chrom,dirx):
 
 for gene in genelist:
 	fbid = gene[0]
-	genename = gene[1]
+	genename = gene[1].replace(' ','_')
 	chromloc=locfinder(fbid)
 	chrom = chromloc.split(':')[0]
 	if chrom == "err":
 		print "Error finding flybase info gene '%s' at http://flybase.org/reports/%s.html.\nContinuing..." %(genename, fbid)
 		continue
 	dirx = chromloc[-2]
-	genedict = proteinscan(fbid,chrom,dirx)
+	genedict = proteinscan(fbid,chrom,dirx,genename)
 	exons = 0
 	for exon in genedict:
 		output.write("%s,%s,%s,%s\n" %(fbid,genename,exon,genedict[exon]))

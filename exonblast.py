@@ -1,24 +1,28 @@
 import csv, os, time, sys
 
-if len(sys.argv) <= 1:
-	sys.exit("USAGE: python exonblast.py path/to/inputfile (result from exonfinder_prot.py)")
+if len(sys.argv) <= 2:
+	sys.exit("USAGE: python exonblast.py path/to/inputfile (result from exonfinder_prot.py) path/to/genome")
 
 inputdb = sys.argv[1] # input file
 inputname = inputdb.split("/")[-1]
 
-genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
+genome = sys.argv[2] # genome eg. "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blasttype = "tblastn"
-outputfolder = "csv-output"
-output = outputfolder + "/" + inputname[:-10] + "-blast.csv"
+csvfolder = "csv"
+metafolder = "results"
+blastoutput = "blastoutput"
+output = csvfolder + "/" + inputname[:-10] + "-blast.csv"
 exonlist = csv.reader(open(inputdb))
 ex_in_scaf = open(output,"w")
 
-#tempin = open('tempin.txt','w') # will be used to store exon sequences temporarily in a file so they can be blasted
-
-if os.path.exists("blastoutput"):
+if os.path.exists(blastoutput):
 	pass
 else:
-	os.mkdir("blastoutput")
+	os.mkdir(blastoutput)
+if os.path.exists(metafolder):
+	pass
+else:
+	os.mkdir(metafolder)
 
 '''
 MODULE TAKEN FROM READBLAST.PY:
@@ -67,10 +71,10 @@ def blastreader(blast):
 
 for exon in exonlist:
 	fbid = exon[0]
-	genename = exon[1]
+	genename = exon[1].replace(' ','_')
 	exID = exon[2]
 	seq = exon[3]
-	genemeta = open("blastmeta/%s_meta.txt" %(fbid), "a")
+	genemeta = open("%s/%s-meta.txt" %(metafolder,genename), "a")
 	tempin = open("tempin.txt","w")
 	tempin.write(seq)
 	tempin.close()
@@ -80,8 +84,8 @@ for exon in exonlist:
 	blastout = open(blastout)	
 	mainlist = blastreader(blastout)
 	for i in range(len(mainlist)):
-		if i >= 5:
-			continue
+		#if i >= 10: # sets maximum number of results 
+		#	continue
 		scaffold = mainlist[i][0]
 		dirx = mainlist[i][1]
 		start = mainlist[i][2]

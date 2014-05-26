@@ -42,13 +42,13 @@ Main input database is called 'to_align' and consists of:
 '''
 def align(to_align,scaffold,genemeta):
 	fbid = to_align[0][0]
-	genename = to_align[0][1]
+	genename = to_align[0][1].replace(' ','_')
 	genemeta.write("\n\n++++ALIGNMENTS:++++\n\n")
 	genemeta.write("exon (no.)\t\tframe\tstart\tend\n")
 	for l in to_align:
 		genemeta.write("%s (%s)\t%s\t%s\t%s\n" %(l[2],l[3],l[5],l[6],l[7]))
 	genemeta.close()
-	output = open("%s/%s-align.csv" %(outputfolder,genename),"w")
+	output = open("%s/%s-align.txt" %(outputfolder,genename),"w")
 	scaffile = open("%s/%s.fa" %(scaffolder,scaffold))
 	scafseq = ''
 	for line in scaffile:
@@ -158,7 +158,8 @@ def scaffoldfind(blastresults):
 	scaffolds = []
 	scafdict = {}
 	newres = []
-	genemeta = open("%s/%s_meta.txt" %(outputfolder,blastresults[0][1]), "a")
+	genename = blastresults[0][1].replace(' ','_')
+	genemeta = open("%s/%s-meta.txt" %(outputfolder,genename), "a")
 	genemeta.write("\n\n++++SCAFFOLDS ISOLATED:++++\n\n")
 	for r in blastresults:
 		if len(r) > 4:
