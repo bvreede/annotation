@@ -25,16 +25,21 @@ genelist = csv.reader(open(inputdb))
 output = open("%s/%s-exons.csv" %(csvfolder,inputname[:-4]),"w")
 
 def metaextract(header,genemeta):
+	'''
+	Takes the header of each isoform and extracts meta-information
+	(i.e. which isoform uses which exons)
+	Saves that information in the metafile.
+	'''
 	protID = header.split()[0][1:]
-	tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(header)
+	tag = re.compile('loc=[1-4|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(header)
 	if tag == None:
 		exons = '(exons)'
 	else:	
 		tag1 = tag.group() #parses out the exon locations used for this isoform
-		tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag1) #splits off the useless info
+		tag2 = re.split('loc=[1-4|XRL]{,2}[a-z|\(|:]*', tag1) #splits off the useless info
 		tag3 = "".join(tag2)
 		exons = tag3.replace(',','\n')
-	tag4 = re.compile('name=[A-Z|a-z|-]*').search(header)
+	tag4 = re.compile('name=[A-Z|a-z|\-|0-9]*').search(header)
 	if tag4 == None:
 		name = ''
 	else:
@@ -57,6 +62,8 @@ def prot_exons(isolist):
 	texd_i=0
 	for i in range(isonum):
 		ex_i = isolist[i].split('..')
+		if len(ex_i) <2: # if a non-exon is in the list it will not be used.
+			continue
 		lexd_i = int(ex_i[1])-int(ex_i[0])+1 #the length of the exon in basepairs
 		sexp_i = int(texd_i/3+0.1) #generates aminoacid start location: ensures 1.0=1; 1.3=1; 1.6=1; 1.99=2
 		isolist_p.append(sexp_i) #appends start location of exon to list
@@ -143,38 +150,38 @@ def proteinscan(fbid,chrom,dirx,genename):
 	isoseq = ""
 	isolist = []
 	isolist_collect = []
-	isoname = ""
 	genedict = {}
+	# finding the headers and the sequences
 	for line in transl_xml:
 		if line[0]== ">": # this line has the fasta header
 			metaextract(line,genemeta)
 			isolist_p = prot_exons(isolist) #get corresponding protein start-end sites from chromosomal start-end sites
-			isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
-			genedict.update(isodict)
-			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line)
+			if len(isolist_p) != 0:
+				isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
+				genedict.update(isodict)
+			else:
+				genemeta.write("error parsing information from header: \n%s\n. Sequence not in dictionary:\n%s\n\n" %(isolist,isoseq))
+			tag = re.compile('loc=[1-4|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line)
 			if tag != None:
 				tag1 = tag.group() #parses out the exon locations used for this isoform
 			else:
 				genemeta.write("error finding exon location in line:\n%s\n\n" %(line))
-				tag1 = ''
-			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag1) #splits off the useless info
+				tag1 = 'err'
+			tag2 = re.split('loc=[1-4|XRL]{,2}[a-z|\(|:]*', tag1) #splits off the useless info
 			tag3 = "".join(tag2)
 			isolist = tag3.split(',') #creates list of exons per isoform
 			isolist_collect.extend(isolist)
-			isoname1 = re.compile('name=[a-z|\-|A-Z]*;').search(line)
-			if isoname1 != None:
-				isoname = isoname1.group()[5:-1] #parses out name
-			else:
-				isoname = ''
-				genemeta.write("error finding isoform name in line:\n%s\n\n" %(line))
 			isoseq = ""
 		#collect protein sequences per isoform
-		if line[0]!= ">": #lines with sequence data
+		else: #lines with sequence data
 			isoseq += line.strip()
 	#what follows now is a repeat so that the last exon is included
-	isolist_p = prot_exons(isolist)
-	isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
-	genedict.update(isodict)
+	isolist_p = prot_exons(isolist) #get corresponding protein start-end sites from chromosomal start-end sites
+	if len(isolist_p) != 0:
+		isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
+		genedict.update(isodict)
+	else:
+		genemeta.write("error parsing information from header: \n%s\n. Sequence not in dictionary:\n%s\n\n" %(isolist,isoseq))
 	#end of repeat code
 	pop = isolator(isolist_collect)
 	for k in pop:
