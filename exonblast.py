@@ -96,7 +96,7 @@ for exon in exonlist:
 		genemeta.write("%s results: %s\n" %(exID, len(mainlist)))
 	genemeta.close()
 	blastout.close()
-	print "completed blast for gene '%s', exon '%s' with %s results" %(genename,exID,len(mainlist))
+	print "Completed blast for gene '%s', exon '%s' with %s results." %(genename,exID,len(mainlist))
 ex_in_scaf.close()
 tempin.close()
 os.remove("tempin.txt")
