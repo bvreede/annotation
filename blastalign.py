@@ -99,7 +99,7 @@ def isolateresults(blastresults,scaffold,genemeta):
 		if r[4] == scaffold:
 			newres2.append(r)
 			dirx.append(r[5][0])
-	if dirx.count('+') == (0 or len(dirx)):
+	if dirx.count('+') == (0 or len(dirx)) and len(dirx) > 0:
 		direction = dirx[0]
 		pass
 	else:
@@ -109,7 +109,6 @@ def isolateresults(blastresults,scaffold,genemeta):
 			direction = '-'
 		else:
 			direction = 'X'
-	newres2.append(direction)
 	remove = []
 	for i in range(len(dirx)):
 		if dirx[i] != direction:
@@ -159,6 +158,7 @@ def scaffoldfind(blastresults):
 	scafdict = {}
 	newres = []
 	genename = blastresults[0][1].replace(' ','_')
+	print "Aligning blast hits for gene '%s'..." %(genename)
 	genemeta = open("%s/%s-meta.txt" %(outputfolder,genename), "a")
 	genemeta.write("\n\n++++SCAFFOLDS ISOLATED:++++\n\n")
 	for r in blastresults:
@@ -170,9 +170,14 @@ def scaffoldfind(blastresults):
 		scafdict[s] = n
 	v = list(scafdict.values()) # list of scaffold occurrences (order as in dictionary)
 	k = list(scafdict.keys()) # list of scaffold names (order as in dictionary)
-	scaffold = k[v.index(max(v))] # finds the FIRST scaffold with the highest occurrence
-	scaffoldextract(scaffold)
-	genemeta.write("Most common scaffold: %s\n" %(scaffold))
+	if len(newres) == 0:
+		genemeta.write("No blastresults, no alignments!\n\n")
+		scaffold = "No-scaffold"
+		print "No blastresults to align for gene '%s'.\nContinuing..."
+	else:
+		scaffold = k[v.index(max(v))] # finds the FIRST scaffold with the highest occurrence
+		scaffoldextract(scaffold)
+		genemeta.write("Most common scaffold: %s\n" %(scaffold))
 	exon = ""
 	scafcheck = []
 	for t in newres:
@@ -186,10 +191,11 @@ def scaffoldfind(blastresults):
 			scafcheck.append(t[4])
 	if scaffold not in scafcheck and len(scafcheck) >0:
 		genemeta.write("Exon %s blasts against %s\n" %(exon,scafcheck))
-	blasted = isolateresults(newres,scaffold,genemeta)
-	direction = blasted[-1] # currently unnecessary, but perhaps useful at some point
-	to_align = blasted[:-1]
-	align(to_align,scaffold,genemeta)
+	to_align = isolateresults(newres,scaffold,genemeta)
+	if len(to_align) > 0:
+		align(to_align,scaffold,genemeta)
+	else:
+		genemeta.write("ERROR determining scaffold and results to add in blast! Aborted alignment.")
 
 
 fbid = ""
@@ -197,10 +203,9 @@ blastresults = []
 for line in blastlist: # the following loop ensures that scaffoldfind is called per gene, not per entry.
 	if line[0] != fbid:
 		if len(blastresults) != 0:
-			scaffold,direction = scaffoldfind(blastresults)
+			scaffoldfind(blastresults)
 		blastresults = []
 		fbid = line[0]
-		
 		blastresults.append(line)
 	else:
 		blastresults.append(line)
