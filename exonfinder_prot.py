@@ -26,10 +26,14 @@ output = open("%s/%s-exons.csv" %(csvfolder,inputname[:-4]),"w")
 
 def metaextract(header,genemeta):
 	protID = header.split()[0][1:]
-	tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(header).group() #parses out the exon locations used for this isoform
-	tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
-	tag3 = "".join(tag2)
-	exons = tag3.replace(',','\n')
+	tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(header)
+	if tag == None:
+		exons = '(exons)'
+	else:	
+		tag1 = tag.group() #parses out the exon locations used for this isoform
+		tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag1) #splits off the useless info
+		tag3 = "".join(tag2)
+		exons = tag3.replace(',','\n')
 	tag4 = re.compile('name=[A-Z|a-z|-]*').search(header)
 	if tag4 == None:
 		name = ''
@@ -147,12 +151,22 @@ def proteinscan(fbid,chrom,dirx,genename):
 			isolist_p = prot_exons(isolist) #get corresponding protein start-end sites from chromosomal start-end sites
 			isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 			genedict.update(isodict)
-			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line).group() #parses out the exon locations used for this isoform
-			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag) #splits off the useless info
+			tag = re.compile('loc=[1-3|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line)
+			if tag != None:
+				tag1 = tag.group() #parses out the exon locations used for this isoform
+			else:
+				genemeta.write("error finding exon location in line:\n%s\n\n" %(line))
+				tag1 = ''
+			tag2 = re.split('loc=[1-3|XRL]{,2}[a-z|\(|:]*', tag1) #splits off the useless info
 			tag3 = "".join(tag2)
 			isolist = tag3.split(',') #creates list of exons per isoform
 			isolist_collect.extend(isolist)
-			isoname = re.compile('name=[a-z|\-|A-Z]*;').search(line).group()[5:-1] #parses out name
+			isoname1 = re.compile('name=[a-z|\-|A-Z]*;').search(line)
+			if isoname1 != None:
+				isoname = isoname1.group()[5:-1] #parses out name
+			else:
+				isoname = ''
+				genemeta.write("error finding isoform name in line:\n%s\n\n" %(line))
 			isoseq = ""
 		#collect protein sequences per isoform
 		if line[0]!= ">": #lines with sequence data
