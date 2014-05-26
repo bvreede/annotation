@@ -1,16 +1,16 @@
 import csv, sys, os
 
 
-if len(sys.argv) <= 1:
-	sys.exit("USAGE: python blastalign.py path/to/inputfile (result from exonblast.py)")
+if len(sys.argv) <= 2:
+	sys.exit("USAGE: python blastalign.py path/to/inputfile (result from exonblast.py) path/to/genome")
 
-genome = "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 inputdb = sys.argv[1] # input file
+genome = sys.argv[2] # genome (eg: "/home/barbara/data/genomes/Ofasciatus/Ofas.scaffolds.fa"
 blastlist = csv.reader(open(inputdb))
-outputfolder = "alignments"
+outputfolder = "results"
 scaffolder = genome.split('/')[-1][:-3] # name of genome fasta file minus .fa
-extra = 500 # n basepairs to add to scaffold sequence
-lline = 90
+extra = 500 # n basepairs to add to scaffold sequence (NB! the last line will not be printed so the last alignment will be less than n basepairs from the end!)
+lline = 90 # adjustable number for linelength in resultfile
 
 if os.path.exists(outputfolder):
 	pass
@@ -22,7 +22,15 @@ else:
 	os.mkdir(scaffolder)
 
 '''
-to_align:
+Alignment module: takes all selected blast hits
+and the scaffold ID, and aligns hits to the scaffold
+sequence.
+Adjustable variables: additional scaffold sequence (before 
+and after the first/last alignment) as 'extra'; length
+of each line as 'lline'. Both are found in the definitions
+on the top of this script.
+
+Main input database is called 'to_align' and consists of:
 [0] = fbid
 [1] = genename
 [2] = exonID
@@ -32,9 +40,15 @@ to_align:
 [6] = start
 [7] = end
 '''
-def align(to_align,scaffold,direction):
+def align(to_align,scaffold,genemeta):
 	fbid = to_align[0][0]
-	output = open("%s/%s-align.csv" %(outputfolder,fbid),"w")
+	genename = to_align[0][1]
+	genemeta.write("\n\n++++ALIGNMENTS:++++\n\n")
+	genemeta.write("exon (no.)\t\tframe\tstart\tend\n")
+	for l in to_align:
+		genemeta.write("%s (%s)\t%s\t%s\t%s\n" %(l[2],l[3],l[5],l[6],l[7]))
+	genemeta.close()
+	output = open("%s/%s-align.csv" %(outputfolder,genename),"w")
 	scaffile = open("%s/%s.fa" %(scaffolder,scaffold))
 	scafseq = ''
 	for line in scaffile:
@@ -129,18 +143,22 @@ def scaffoldextract(scaffold):
 		elif marker == 1:
 			outputfile.write(line.strip())
 
+
 '''
 Takes a matrix of blastresults from one gene (per result:
 [fbid,genename,exon,resultno,scaffold,direction,start,end])
 and finds the most common scaffold and gene orientation.
 Also calls the scaffoldextract module and saves the scaffold
 as a separate file.
+This is the main module of the script: it calls both the
+scaffold extractor (scaffoldextract), blastresult isolator
+(isolateresults) and the alignment module (align).
 '''
 def scaffoldfind(blastresults):
 	scaffolds = []
 	scafdict = {}
 	newres = []
-	genemeta = open("blastmeta/%s_meta.txt" %(blastresults[0][0]), "a")
+	genemeta = open("%s/%s_meta.txt" %(outputfolder,blastresults[0][1]), "a")
 	genemeta.write("\n\n++++SCAFFOLDS ISOLATED:++++\n\n")
 	for r in blastresults:
 		if len(r) > 4:
@@ -162,21 +180,20 @@ def scaffoldfind(blastresults):
 				genemeta.write("Exon %s blasts against %s\n" %(exon,scafcheck))
 			exon = t[2]
 			scafcheck = []
-			scafcheck.append(t[4])
+			scafcheck.append(t[4]) # makes list of all scaffolds to check that they are the same
 		else:
 			scafcheck.append(t[4])
 	if scaffold not in scafcheck and len(scafcheck) >0:
 		genemeta.write("Exon %s blasts against %s\n" %(exon,scafcheck))
 	blasted = isolateresults(newres,scaffold,genemeta)
-	direction = blasted[-1]
+	direction = blasted[-1] # currently unnecessary, but perhaps useful at some point
 	to_align = blasted[:-1]
-	genemeta.close()
-	align(to_align,scaffold,direction)
-	return scaffold, direction
+	align(to_align,scaffold,genemeta)
+
 
 fbid = ""
 blastresults = []
-for line in blastlist:
+for line in blastlist: # the following loop ensures that scaffoldfind is called per gene, not per entry.
 	if line[0] != fbid:
 		if len(blastresults) != 0:
 			scaffold,direction = scaffoldfind(blastresults)
@@ -186,5 +203,5 @@ for line in blastlist:
 		blastresults.append(line)
 	else:
 		blastresults.append(line)
-scaffold,direction = scaffoldfind(blastresults)
+scaffoldfind(blastresults)
 
