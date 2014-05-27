@@ -173,7 +173,7 @@ def scaffoldfind(blastresults):
 	if len(newres) == 0:
 		genemeta.write("No blastresults, no alignments!\n\n")
 		scaffold = "No-scaffold"
-		print "No blastresults to align for gene '%s'.\nContinuing..."
+		print "No blastresults to align for gene '%s'.\nContinuing..." %(genename)
 	else:
 		scaffold = k[v.index(max(v))] # finds the FIRST scaffold with the highest occurrence
 		scaffoldextract(scaffold)
