@@ -92,6 +92,7 @@ def prot_dict(isolist,isolist_p,isoseq,dirx):
 		isodict[exon] = sequence #saves in dictionary: the exon-specific sequence with the exon identifier as key
 	return isodict
 
+"""
 def isolator(isolist):
 	'''
 	takes the total list of exons from all isoforms of a gene (produced by prot_exons)
@@ -122,6 +123,7 @@ def isolator(isolist):
 			else:					#...and the end of the test is after the end of the check
 				check = isolist2[n]			#make the test entry a new check
 	return pop
+"""
 
 def locfinder(fbid):
 	'''
@@ -181,11 +183,13 @@ def proteinscan(fbid,chrom,dirx,genename):
 		isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 		genedict.update(isodict)
 	#end of repeat code
+	"""
 	pop = isolator(isolist_collect)
 	for k in pop:
 		i = [str(k[0]),str(k[1])] #make string to enable joining
 		popkey = "..".join(i)
 		del genedict[popkey]
+	"""
 	genemeta.close()
 	return genedict
 
