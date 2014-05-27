@@ -102,10 +102,12 @@ def isolator(isolist):
 	isolist2 = []
 	for i in isoset:
 		spliti = i.split('..') #splits start and end location
-		ilist = [int(spliti[0]),int(spliti[1])] #makes a new sublist with start and end locations
-		isolist2.append(ilist)
+		if len(spliti) == 2:
+			ilist = [int(spliti[0]),int(spliti[1])] #makes a new sublist with start and end locations
+			isolist2.append(ilist)
 	isolist2.sort() #sorts on start location (first item in the sublists)
-	check = isolist2[0] #the sublist (start,end) against which each test entry will be checked
+	if len(isolist2) > 0:
+		check = isolist2[0] #the sublist (start,end) against which each test entry will be checked
 	pop = []
 	for n in range(1,len(isolist2)):	#go through each entry after the first (the first is 'check', the others are 'test')
 		if isolist2[n][0] == check[0]: 		#if the start sequences are the same...
@@ -159,8 +161,6 @@ def proteinscan(fbid,chrom,dirx,genename):
 			if len(isolist_p) != 0:
 				isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 				genedict.update(isodict)
-			else:
-				genemeta.write("error parsing information from header: \n%s\n. Sequence not in dictionary:\n%s\n\n" %(isolist,isoseq))
 			tag = re.compile('loc=[1-4|XRL]{,2}:[a-z|0-9|\(|\.|,]*').search(line)
 			if tag != None:
 				tag1 = tag.group() #parses out the exon locations used for this isoform
@@ -180,8 +180,6 @@ def proteinscan(fbid,chrom,dirx,genename):
 	if len(isolist_p) != 0:
 		isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 		genedict.update(isodict)
-	else:
-		genemeta.write("error parsing information from header: \n%s\n. Sequence not in dictionary:\n%s\n\n" %(isolist,isoseq))
 	#end of repeat code
 	pop = isolator(isolist_collect)
 	for k in pop:
