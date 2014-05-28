@@ -92,39 +92,6 @@ def prot_dict(isolist,isolist_p,isoseq,dirx):
 		isodict[exon] = sequence #saves in dictionary: the exon-specific sequence with the exon identifier as key
 	return isodict
 
-"""
-def isolator(isolist):
-	'''
-	takes the total list of exons from all isoforms of a gene (produced by prot_exons)
-	and finds the duplicates and overlaps. Returns a set of keys
-	that can be removed from the exon dictionary.
-	'''
-	isoset=set(isolist) #puts all items in a set. This deletes duplicates.
-	isolist2 = []
-	for i in isoset:
-		spliti = i.split('..') #splits start and end location
-		if len(spliti) == 2:
-			ilist = [int(spliti[0]),int(spliti[1])] #makes a new sublist with start and end locations
-			isolist2.append(ilist)
-	isolist2.sort() #sorts on start location (first item in the sublists)
-	if len(isolist2) > 0:
-		check = isolist2[0] #the sublist (start,end) against which each test entry will be checked
-	pop = []
-	for n in range(1,len(isolist2)):	#go through each entry after the first (the first is 'check', the others are 'test')
-		if isolist2[n][0] == check[0]: 		#if the start sequences are the same...
-			if isolist2[n][1] >= check[1]:		#...and the end of the test is after the end of the check
-				pop.append(check)			#then discard the check
-				check = isolist2[n]			#and make the test entry a new check
-			else:					#...and the end of the check is after the end of the test
-				pop.append(isolist2[n])			#discard the test entry
-		else:					#if the start sequences are not equal (which means test starts after check)...
-			if isolist2[n][1] <= check[1]:		#...and the end of the test is before or equal to the end of the check
-				pop.append(isolist2[n])			#then discard the test entry
-			else:					#...and the end of the test is after the end of the check
-				check = isolist2[n]			#make the test entry a new check
-	return pop
-"""
-
 def locfinder(fbid):
 	'''
 	Takes flybase ID of a gene and returns its sequence
@@ -150,6 +117,10 @@ def proteinscan(fbid,chrom,dirx,genename):
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
 	genemeta = open("%s/%s-meta.txt" %(outputfolder,genename),"w")
+	genemeta.write("Meta information for gene '%s' (%s)\n" %(genename,fbid))
+	genemeta.write("Gene URL: http://flybase.org/reports/%s.html\n" %(fbid))
+	genemeta.write("Isoform URL: %s\n" %(transl_url))
+	genemeta.write("Orientation in Drosophila melanogaster: %s\n\n" %(dirx))
 	genemeta.write("++++ISOFORMS:++++\n\n")
 	isoseq = ""
 	isolist = []
@@ -183,13 +154,6 @@ def proteinscan(fbid,chrom,dirx,genename):
 		isodict = prot_dict(isolist,isolist_p,isoseq,dirx) #put all in dictionary
 		genedict.update(isodict)
 	#end of repeat code
-	"""
-	pop = isolator(isolist_collect)
-	for k in pop:
-		i = [str(k[0]),str(k[1])] #make string to enable joining
-		popkey = "..".join(i)
-		del genedict[popkey]
-	"""
 	genemeta.close()
 	return genedict
 
