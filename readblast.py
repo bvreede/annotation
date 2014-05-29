@@ -12,14 +12,19 @@ import os, time, sys
 
 ### INPUT ARGUMENTS ###
 if len(sys.argv) <= 2:
-	sys.exit("USAGE: python readblast.py path/to/genome path/to/blast.output.file [n_nucleotides_to_add]")
+	sys.exit("USAGE: python readblast.py path/to/genome path/to/blast.output.file [n_nucleotides_to_add_before] [n_nucleotides_to_add_after]")
 
 genome = sys.argv[1] #path to genome
 blastoutput = sys.argv[2] #path to BLAST outputfile
-if len(sys.argv) == 4:
-	addbp=sys.argv[3]
+if len(sys.argv) == 5:
+	addbp_before=int(sys.argv[3])
+	addbp_after=int(sys.argv[4])
+elif len(sys.argv) == 4:
+	addbp_before=int(sys.argv[3])
+	addbp_after=int(sys.argv[3])
 else:
-	addbp = 100 #n of nucleotides to add to each sequence
+	addbp_before = 100 #n of nucleotides to add before each sequence
+	addbp_after = 100
 
 
 ### READ BLAST OUTPUT FILE ###
@@ -103,26 +108,26 @@ Makes a new fasta file that contains the sequences of all hits
 and describes in the header the start and end site, as well as
 the frame, and how many nt were added.
 '''
-def hitextract(fragments,dir_out,n):
+def hitextract(fragments,dir_out,b,a):
 	for hit in fragments:
 		scaffid = hit[0]
 		frame = hit[1]
 		span = [int(hit[2]),int(hit[3])]
-		start = min(span)-n
+		start = min(span)-b
 		if start <= 1:
 			start = 1
-		end = max(span)+n
+		end = max(span)+a
 		scaffasta = open("%s/%s-entire.fa" %(dir_out,scaffid))
-		line = scaffasta.readlines() 
+		line = scaffasta.readlines()
 		linelen = len(line[1].strip()) # calculates the n of basepairs in each line
 		linestart = start/50+1
 		lineend = end/50+1
 		if lineend >= len(line):
 			lineend = len(line)
-		start_inseq = (start+n)-((linestart-1)*50)+1 # where in the sequence between linestart-lineend is the actual hit?
-		end_inseq = end-start-2*n+start_inseq # where in the sequence between linestart-lineend does the hit end?
+		start_inseq = min(span)-((linestart-1)*50)+1 # where in the sequence between linestart-lineend is the actual hit?
+		end_inseq = max(span)-((linestart-1)*50)+1 # where in the sequence between linestart-lineend does the hit end?
 		outfasta = open("%s/%s-blastresults.fa" %(dir_out,scaffid), "a")
-		outfasta.write(">%s:%s-%s_in-following-seq=%s-%s_frame=%s\n" %(scaffid,hit[2],hit[3],start_inseq,end_inseq,frame[0]))
+		outfasta.write(">%s:%s-%s (hit: %s-%s in this sequence) frame: %s\n" %(scaffid,hit[2],hit[3],start_inseq,end_inseq,frame[0]))
 		for i in range(linestart,lineend):
 			outfasta.write(line[i])
 		outfasta.write("\n")
@@ -143,4 +148,4 @@ for line in fragments:
 	else:
 		scaflist.append(line[0])
 scaffoldextract(readgenome,dir_out,scaflist)
-hitextract(fragments,dir_out,addbp)
+hitextract(fragments,dir_out,addbp_before,addbp_after)
