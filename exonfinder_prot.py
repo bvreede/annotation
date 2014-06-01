@@ -172,5 +172,4 @@ for gene in genelist:
 		output.write("%s,%s,%s,%s\n" %(fbid,genename,exon,genedict[exon]))
 		exons += 1
 	print "For gene '%s': %s exons saved." %(genename,exons)
-
 output.close()
