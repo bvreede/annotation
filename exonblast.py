@@ -106,7 +106,7 @@ for exon in exonlist:
 		genemeta.write("%s results: None, length: %s\n" %(exID, exonlen))
 		ex_in_scaf.write("%s,%s,%s\n" %(fbid,genename,exID))
 	else:
-		for i in range(len(mainlist)):
+		for i in range(min(len(mainlist),15)):#only goes through this 15 times if mainlist is larger than that.
 			scaffold = mainlist[i][0]
 			dirx = mainlist[i][1]
 			start = mainlist[i][2]
