@@ -37,8 +37,12 @@ Main input database is called 'to_align' and consists of:
 [3] = exonnr
 [4] = scaffold
 [5] = frame
-[6] = start
-[7] = end
+[6] = start in genome
+[7] = end in genome
+[8] = start in exon (query)
+[9] = end in exon (query)
+[10] = length of exon (query)
+(except when no hits are found, then it's only 0-2)
 '''
 def align(to_align,scaffold,genemeta):
 	fbid = to_align[0][0]
@@ -160,6 +164,13 @@ def scaffoldfind(blastresults):
 	genename = blastresults[0][1].replace(' ','_')
 	print "Aligning blast hits for gene '%s'..." %(genename)
 	genemeta = open("%s/%s-meta.txt" %(outputfolder,genename), "a")
+	genemeta.write("\n\n++++RAW HITS:++++\n\n")
+	genemeta.write("exon ID\t\t\tlength\thit no.\tstart\tend\tscaffold\tframe\tstart\tend\n")
+	for hit in blastresults:#adds meta-info about each hit to the meta file.
+		if len(hit) > 4:
+			genemeta.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" %(hit[2],hit[10],hit[3],hit[8],hit[9],hit[4],hit[5],hit[6],hit[7]))
+		else:
+			genemeta.write("None.")
 	genemeta.write("\n\n++++SCAFFOLDS ISOLATED:++++\n\n")
 	for r in blastresults:
 		if len(r) > 4:
