@@ -169,8 +169,6 @@ def scaffoldfind(blastresults):
 	for hit in blastresults:#adds meta-info about each hit to the meta file.
 		if len(hit) > 4:
 			genemeta.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" %(hit[2],hit[10],hit[3],hit[8],hit[9],hit[4],hit[5],hit[6],hit[7]))
-		else:
-			genemeta.write("None.")
 	genemeta.write("\n\n++++SCAFFOLDS ISOLATED:++++\n\n")
 	for r in blastresults:
 		if len(r) > 4:
