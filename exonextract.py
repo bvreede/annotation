@@ -1,5 +1,5 @@
 '''
-Very quick script that transforms parts of the meta-files
+Script to quickly transform parts of the meta-files
 made by the annotation pipeline, specifically the part where
 exons are collected and a list of exons per isoform is given,
 to a workable table.
@@ -41,7 +41,7 @@ for line in isoforms:
 if len(isoexons) > 0: #is only called if there is no empty final line to process the last exon.
 	for e in exonlist:
 		if e in isoexons:
-			output.write("X,")
+			output.write("1,")
 		else:
 			output.write(",")
 			
