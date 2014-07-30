@@ -27,12 +27,13 @@ def scaffoldextract(readgenome,scaffold):
 			scafcollect += line.strip()
 	return scafcollect
 
-output = "%s/%s_Scaffold%s:%s..%s.txt" %(dir_out,species,scaf,start,end)
 if species in genomedict:
 	genome = genomedir + genomedict[species]
 else: 
 	sys.exit("Species genome not found. Add the path to the python script, or check your spelling.")
 readgenome = open(genome)
+
+output = "%s/%s_Scaffold%s:%s..%s.txt" %(dir_out,species,scaf,start,end)
 outputfile = open(output,"w")
 scaffold = "Scaffold" + scaf
 scafcollect = scaffoldextract(readgenome,scaffold)
