@@ -1,17 +1,53 @@
-import sys
+'''
+This script can be used in an automated pipeline to retrieve
+a fragment of a genome sequence (in a fasta file) and save it
+separately.
+The script works with python 2.7.
+Author: Barbara Vreede
+Contact: b.vreede@gmail.com
+Date: 17 August 2014
+'''
+
+import sys,os
 
 if len(sys.argv) <= 4:
-	sys.exit("USAGE: python getseq.py [species (4 letter abbreviation)] [scaffold (number only)] [start] [end]")
+	sys.exit("USAGE: python getseq.py species scaffoldnr start end [optional:outfolder]")
 
 species = sys.argv[1]
 scaf = sys.argv[2]
 start=int(sys.argv[3])
 end=int(sys.argv[4])
 
-dir_out = "/home/barbara/Dropbox/oncopeltus/annotations"
+'''
+Customize the following paths:
+'''
+try:
+	dir_out = sys.argv[5]
+except IndexError: #if there are only 4 arguments then the outfolder will be default.
+	dir_out = "/home/barbara/Dropbox/oncopeltus/annotations"
 genomedir = "/home/barbara/data/genomes/"
 genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_Bbug02212013.genome.fa"}
 
+'''
+Verifying input data, open genome file and create output folder.
+'''
+if species in genomedict:
+	genome = genomedir + genomedict[species]
+else: 
+	sys.exit("Species genome not found. Add the path to the getseq.py script, or check your spelling. (e.g. 'Ofas'.)")
+if os.path.exists(genome):
+	readgenome = open(genome)
+else:
+	sys.exit("Could not find genome directory. Verify path in getseq.py code.")
+if os.path.exists(dir_out):
+	pass
+else:
+	os.system("mkdir %s" %dir_out)
+
+'''
+Find the appropriate scaffold in the fasta file, and save
+the entire scaffold sequence to local memory.
+'''
 def scaffoldextract(readgenome,scaffold):
 	scafcollect = ""
 	marker = 0 # is "1" when reading and saving the correct scaffold sequence
@@ -27,12 +63,10 @@ def scaffoldextract(readgenome,scaffold):
 			scafcollect += line.strip()
 	return scafcollect
 
-if species in genomedict:
-	genome = genomedir + genomedict[species]
-else: 
-	sys.exit("Species genome not found. Add the path to the python script, or check your spelling.")
-readgenome = open(genome)
-
+'''
+Open the outputfile, call scaffoldextract, save the appropriate
+part of the scaffold to the outputfile.
+'''
 output = "%s/%s_Scaffold%s:%s..%s.txt" %(dir_out,species,scaf,start,end)
 outputfile = open(output,"w")
 scaffold = "Scaffold" + scaf
