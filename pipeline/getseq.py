@@ -2,6 +2,8 @@
 This script can be used in an automated pipeline to retrieve
 a fragment of a genome sequence (in a fasta file) and save it
 separately.
+Requires customization of directory paths in the script: location
+of genome fasta files and the output folder.
 The script works with python 2.7.
 Author: Barbara Vreede
 Contact: b.vreede@gmail.com
@@ -39,6 +41,18 @@ if os.path.exists(genome):
 	readgenome = open(genome)
 else:
 	sys.exit("Could not find genome directory. Verify path in getseq.py code.")
+for i in range(len(scaf)):
+	scaftest = scaf[i:]
+	try:
+		int(scaftest) #checks if the 'scaffold' input is a number. Removes characters until it is.
+		scaf = scaftest
+		break
+	except ValueError:
+		continue
+try: #last check: if after all the character-removing the scaffold *still* isn't a number...
+	int(scaf)
+except ValueError:
+	sys.exit("USAGE: python getseq.py species scaffoldnr start end [optional:outfolder]. Scaffold not a number.")
 if os.path.exists(dir_out):
 	pass
 else:
@@ -67,7 +81,7 @@ def scaffoldextract(readgenome,scaffold):
 Open the outputfile, call scaffoldextract, save the appropriate
 part of the scaffold to the outputfile.
 '''
-output = "%s/%s_Scaffold%s:%s..%s.txt" %(dir_out,species,scaf,start,end)
+output = "%s/%s_Scaffold%s:%s..%s" %(dir_out,species,scaf,start,end)
 outputfile = open(output,"w")
 scaffold = "Scaffold" + scaf
 scafcollect = scaffoldextract(readgenome,scaffold)
