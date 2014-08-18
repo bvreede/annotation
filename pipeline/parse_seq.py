@@ -21,11 +21,12 @@ genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_B
 '''
 Specifying input parameters
 '''
-if len(sys.argv) <= 2:
-	sys.exit("USAGE: python parse_seq.py species infolder")
+if len(sys.argv) <= 3:
+	sys.exit("USAGE: python parse_seq.py species infolder extra_nt")
 
 species = sys.argv[1]
 infolder = sys.argv[2]
+extra = sys.argv[3]
 
 '''
 Verifying input parameters
@@ -41,11 +42,20 @@ else:
 if infolder[-1:] == "/": #to prevent mishaps when folder name is specified with / at the end
 	infolder = infolder[:-1]
 if os.path.exists(infolder):
-	continue
+	pass
 else:
 	sys.exit("Could not find input directory. Verify path in input parameters.")
+try:
+	int(extra)
+except ValueError:
+	sys.exit("Last argument ('extrant') should be a number: how many extra nucleotides to add per sequence extraction.")
 
-
-
+'''
+run the getseq.py script on each line
+'''
+filelist = []
 for filename in os.listdir(infolder):
-	if 
+	if filename[-4:] == ".csv":
+		filelist.append(filename)
+
+print filelist
