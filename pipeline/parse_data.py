@@ -34,7 +34,7 @@ Calls saveinfo for each line (=hit).
 '''
 def blastreader(filename):
 	blast = open("%s/%s" %(infolder,filename))
-	outname = filename + "_smy.csv"
+	outname = filename[:-4] + "_smy.csv"
 	out = open("%s/%s" %(infolder,outname), "w")
 	#define parameters (empty or null)
 	length,score = 0,0
@@ -77,5 +77,7 @@ Run the blastreader for each file in the folder:
 for filename in os.listdir(infolder):
 	if filename[0] == ".": #So not to run on hidden files...
 		print "Skipping hidden file:", filename
+		continue
+	elif filename[-4:] != ".txt":
 		continue
 	blastreader(filename)
