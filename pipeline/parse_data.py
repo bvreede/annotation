@@ -34,7 +34,7 @@ Calls saveinfo for each line (=hit).
 '''
 def blastreader(filename):
 	blast = open("%s/%s" %(infolder,filename))
-	outname = filename[:-4] + "_smy.csv"
+	outname = filename[:-4] + ".csv"
 	out = open("%s/%s" %(infolder,outname), "w")
 	#define parameters (empty or null)
 	length,score = 0,0
