@@ -46,7 +46,7 @@ else:
 if infolder[-1:] == "/": #to prevent mishaps when folder name is specified with / at the end
 	infolder = infolder[:-1]
 if os.path.exists(infolder):
-	continue
+	pass
 else:
 	sys.exit("Could not find input directory. Verify path in input parameters.")
 
