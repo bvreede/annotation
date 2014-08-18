@@ -72,6 +72,6 @@ for filename in os.listdir(infolder):
 Executing the blast command.
 '''
 for i in filelist:
-	out = "%s_blast2%s" %(i,species)
+	out = "%s_blast2%s.txt" %(i,species)
 	blast = "%s -db %s -query %s/%s -out %s/%s" %(blasttype,genome,infolder,i,outfolder,out)
 	os.system(blast)
