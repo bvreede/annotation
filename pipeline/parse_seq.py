@@ -22,11 +22,12 @@ genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_B
 Specifying input parameters
 '''
 if len(sys.argv) <= 3:
-	sys.exit("USAGE: python parse_seq.py species infolder extra_nt")
+	sys.exit("USAGE: python parse_seq.py species infolder extra_nt max_scaffolds")
 
 species = sys.argv[1]
 infolder = sys.argv[2]
-extra = sys.argv[3]
+extra = int(sys.argv[3])
+max_scafcount = int(sys.argv[4])
 
 '''
 Verifying input parameters
@@ -50,6 +51,24 @@ try:
 except ValueError:
 	sys.exit("Last argument ('extrant') should be a number: how many extra nucleotides to add per sequence extraction.")
 
+
+'''
+translate scaffold, start, and end site into a system command
+that retrieves the corresponding sequence and puts it in the appropriate
+output folder.
+'''
+scafcount = 0
+
+def getseq(scaf_e,start_e,end_e,outfolder):
+	start_b = start_e - extra
+	end_b = end_e + extra
+	scaf_b = scaf_e[8:]
+	command = "python getseq.py %s %s %s %s %s" %(species,scaf_b,start_b,end_b,outfolder)
+	global scafcount #variable that counts whenever a 
+	scafcount += 1
+	if scafcount <= max_scafcount:
+		os.system(command)
+
 '''
 run the getseq.py script on each line
 '''
@@ -58,4 +77,36 @@ for filename in os.listdir(infolder):
 	if filename[-4:] == ".csv":
 		filelist.append(filename)
 
-print filelist
+
+for k in filelist:
+	infile = open("%s/%s" %(infolder,k))
+	outfolder = "%s/%s" %(infolder,k[:-4])
+	if os.path.exists(outfolder):
+		pass
+	else:
+		os.system("mkdir %s" %outfolder)
+	count = 0
+	for line in infile:
+		info = line.split(',')
+		if len(info) <= 4 or info[0] == "Scaffold": # this indicates the headers and meta info in the file
+			continue
+		#only actual hits from this point on!
+		scaffold = info[0] #saves scaffold number
+		start = int(info[5]) #saves start number
+		end = int(info[6]) #saves end number
+		if count != 0: #count = 0 only in the first hit, where scaf_e etc. are not yet specified.
+			if scaffold == scaf_e:
+				start_e = min(start_e,start)
+				end_e = max(end_e,end)
+			else:
+				getseq(scaf_e,start_e,end_e,outfolder)
+				scaf_e = scaffold
+				start_e = start
+				end_e = end	
+		else: #this condition should only be passed in the first hit.
+			scaf_e = scaffold
+			start_e = start
+			end_e = end
+		count += 1 #increases with every line
+	getseq(scaf_e,start_e,end_e,outfolder)
+	scafcount = 0
