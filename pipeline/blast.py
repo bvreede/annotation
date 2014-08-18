@@ -31,12 +31,26 @@ species = sys.argv[1]
 infolder = sys.argv[2]
 blasttype = sys.argv[3]
 
+'''
+Verifying input parameters
+'''
+if species in genomedict:
+	genome = genomedir + genomedict[species]
+else: 
+	sys.exit("Species genome not found. Add the path to the getseq.py script, or check your spelling. (e.g. 'Ofas'.)")
+if os.path.exists(genome):
+	readgenome = open(genome)
+else:
+	sys.exit("Could not find genome directory. Verify path in getseq.py code.")
+
 if infolder[-1:] == "/": #to prevent mishaps when folder name is specified with / at the end
 	infolder = infolder[:-1]
+if os.path.exists(infolder):
+	continue
+else:
+	sys.exit("Could not find input directory. Verify path in input parameters.")
 
-outfolder = "%s_blastout" %(infolder)
-genome = genomedir + genomedict[species]
-
+outfolder = "%s_blast2%s" %(infolder,species)
 if os.path.exists(outfolder):
 	try:
 		input("Adding (and possibly overwriting) content to %s. Press enter to confirm..." %outfolder)
@@ -50,7 +64,7 @@ Specifying files to blast.
 '''
 filelist = []
 for filename in os.listdir(infolder):
-	if filename == ".DS_Store": #this file sometimes gives errors when running on mac
+	if filename[0] == ".": #So not to run on hidden files...
 		continue
 	filelist.append(filename)
 
@@ -61,4 +75,3 @@ for i in filelist:
 	out = "%s_blast2%s" %(i,species)
 	blast = "%s -db %s -query %s/%s -out %s/%s" %(blasttype,genome,infolder,i,outfolder,out)
 	os.system(blast)
-
