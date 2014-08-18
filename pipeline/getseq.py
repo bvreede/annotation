@@ -81,10 +81,14 @@ def scaffoldextract(readgenome,scaffold):
 Open the outputfile, call scaffoldextract, save the appropriate
 part of the scaffold to the outputfile.
 '''
-output = "%s/%s_Scaffold%s:%s..%s" %(dir_out,species,scaf,start,end)
-outputfile = open(output,"w")
 scaffold = "Scaffold" + scaf
 scafcollect = scaffoldextract(readgenome,scaffold)
+if start <= 0:
+	start = 1
+if end >= len(scafcollect):
+	end = len(scafcollect)
+output = "%s/%s_Scaffold%s:%s..%s" %(dir_out,species,scaf,start,end)
+outputfile = open(output,"w")
 query = scafcollect[start-1:end]
 outputfile.write(query)
 outputfile.close()
