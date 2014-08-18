@@ -21,7 +21,7 @@ genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_B
 '''
 Specifying input parameters
 '''
-if len(sys.argv) <= 3:
+if len(sys.argv) <= 4:
 	sys.exit("USAGE: python parse_seq.py species infolder extra_nt max_scaffolds")
 
 species = sys.argv[1]
