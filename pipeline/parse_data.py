@@ -44,6 +44,11 @@ def blastreader(filename):
 		k = line.split()
 		if len(k) == 0: #checks if line is not empty
 			continue
+		if k[0] == "*****": # this means no hits are found at all; abort reading.
+			out.write(line)
+			out.close()
+			blast.close()
+			break
 		if line[:7] == "Length=" and length == 0: #it only takes length 1x (this is query length)
 			length = line.strip()[7:]
 			out.write("Querylength:,%s\n\n" %length)
@@ -80,4 +85,5 @@ for filename in os.listdir(infolder):
 		continue
 	elif filename[-4:] != ".txt":
 		continue
+	print "Parsing", filename, "..."
 	blastreader(filename)
