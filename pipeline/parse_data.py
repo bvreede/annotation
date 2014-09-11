@@ -73,8 +73,9 @@ def blastreader(filename):
 			sbjlist.append(int(k[3]))
 		elif k[0] == "Lambda":
 			saveinfo(out,scaffold,evalue,frame,querylist,sbjlist)
-	out.close()
-	blast.close()
+			out.close()
+			blast.close()
+			break
 
 '''
 Run the blastreader for each file in the folder:
