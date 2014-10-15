@@ -16,7 +16,7 @@ To allow easy switching to different genomes, add any new genomes used
 to the 'genomedict' dictionary instead of replacing the existing information.
 '''
 genomedir = "/home/barbara/data/genomes/" #directory where genomes are located
-genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_Bbug02212013.genome.fa"} #name of blastable genome dbs
+genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_Bbug02212013.genome.fa", "Ccap":"Ccapitata/Ccap01172013-genome.fa"} #name of blastable genome dbs
 
 '''
 Specifying input parameters

@@ -38,7 +38,7 @@ def seqparse(fbid,dirx,chrom):
 	'''
 	transl_url = "http://flybase.org/cgi-bin/getseq.html?source=dmel&id=%s&chr=%s&dump=PrecompiledFasta&targetset=translation" %(fbid,chrom)
 	transl_xml = urllib2.urlopen(transl_url)
-	seq,protid = "",""
+	seq,protid = "","" #empty before starting
 	seqdict = {}
 	for line in transl_xml:
 		if line[0] == ">":
@@ -48,13 +48,13 @@ def seqparse(fbid,dirx,chrom):
 			protid = line.split()[0][1:]
 		else:
 			seq += line.strip()
-	seqdict[protid] = seq
+	seqdict[protid] = seq # save the collected sequence with its ID in a dictionary
 	return seqdict
 
 
 for gene in genelist:
-	genename,fbid = gene
-	genename.replace(" ","_")
+	genename,fbid = gene #each 'gene' contains the full input line, with both the fbid and the name
+	genename = genename.replace(" ","_")
 	if fbid == "":
 		print "Error in document: gene %s has no FBid." %(genename)
 		continue

@@ -28,7 +28,7 @@ try:
 except IndexError: #if there are only 4 arguments then the outfolder will be default.
 	dir_out = "/home/barbara/Dropbox/oncopeltus/annotations"
 genomedir = "/home/barbara/data/genomes/"
-genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_Bbug02212013.genome.fa"}
+genomedict = {"Ofas":"Ofasciatus/Ofas.scaffolds.fa", "Clec":"Clectularius/Clec_Bbug02212013.genome.fa", "Ccap":"Ccapitata/Ccap01172013-genome.fa"}
 
 '''
 Verifying input data, open genome file and create output folder.
